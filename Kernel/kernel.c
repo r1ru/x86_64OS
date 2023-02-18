@@ -21,8 +21,9 @@ void KernelMain(FrameBufferInfo *info) {
         }
     }
 
+    WriteString(50, 40, "HELLO WORLD!", &white);
     WriteAscii(50, 50, 'A', &white);
     WriteAscii(58, 50, 'A', &white);
-    
+
     while(1) asm volatile("hlt");
 }

@@ -483,11 +483,17 @@ const uint8_t font_bitmap[][FONT_HEIGHT] = {
     }
 };
 
-void WriteAscii(const int x, const int y, const unsigned char c, const Pixel * const color) {
+// TODO: 入力文字が表示できるか確認する。(範囲外参照が起きないようにする)
+void WriteAscii(const int x, const int y, const char c, const Pixel * const color) {
      for(int dx = 0; dx < FONT_WIDTH; dx++) {
         for(int dy = 0; dy < FONT_HEIGHT; dy++){
-            if((font_bitmap[c][dy] << dx) & 0b10000000)
+            if((font_bitmap[(unsigned int)c][dy] << dx) & 0b10000000)
                 WritePixel(x + dx, y + dy, &white);
         }
     }
+}
+
+void WriteString(const int x, const int y, const char * const s, const Pixel * const color) {
+    for(int i = 0; s[i] != '\0'; i++)
+        WriteAscii(x + FONT_WIDTH * i, y, s[i], color);
 }
