@@ -20,6 +20,9 @@ void KernelMain(FrameBufferInfo *info) {
             WritePixel(x, y, &blue);
         }
     }
+
+    WriteAscii(50, 50, 'A', &white);
+    WriteAscii(58, 50, 'A', &white);
     
     while(1) asm volatile("hlt");
 }

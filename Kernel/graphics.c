@@ -2,27 +2,28 @@
 
 static FrameBufferInfo *frame_buffer;
 
-void (*WritePixel)(const int x, const int y, const Pixel *c) = NULL;
+void (*WritePixel)(const int x, const int y, const Pixel * const color) = NULL;
 
-const Pixel blue = {0xff, 0, 0, 0};
+const Pixel blue  = {0xff, 0, 0};
+const Pixel white = {0xff, 0xff, 0xff};
 
-static void _writePixelRGB(const int x, const int y, const Pixel *c) {
+static void _writePixelRGB(const int x, const int y, const Pixel * const color) {
     const int idx = frame_buffer->pixels_per_scanline * y + x;
     uint8_t *p = (uint8_t *)frame_buffer->base + sizeof(Pixel) * idx;
 
-    p[0] = c->red;
-    p[1] = c->green;
-    p[2] = c->blue;
+    p[0] = color->red;
+    p[1] = color->green;
+    p[2] = color->blue;
 
 }
 
-static void _writePixelBGR(const int x, const int y, const Pixel *c) {
+static void _writePixelBGR(const int x, const int y, const Pixel * const color) {
     const int idx = frame_buffer->pixels_per_scanline * y + x;
     uint8_t *p = (uint8_t *)frame_buffer->base + sizeof(Pixel) * idx;
     
-    p[0] = c->blue;
-    p[1] = c->green;
-    p[2] = c->red;
+    p[0] = color->blue;
+    p[1] = color->green;
+    p[2] = color->red;
 }
 
 void InitializeGraphics(FrameBufferInfo *info) {
