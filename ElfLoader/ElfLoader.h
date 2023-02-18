@@ -3,6 +3,7 @@
 
 #include <UefiLib.h>
 #include <FileInfo.h>
+#include <kernel.h>
 #include "elf.h"
 
 #endif

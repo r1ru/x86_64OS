@@ -87,7 +87,6 @@ void UefiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     }
 
     // Locate entry point
-    typedef void EntryPointType(UINT64, UINT64);
     EntryPointType *entry_point = (EntryPointType*)ehdr->e_entry;
 
     // Free allocated memory pool
@@ -97,9 +96,32 @@ void UefiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     // Exit BootServices
     status = ExitBootServices(ImageHandle);
     assert(status, L"ExitBootServices");
+    
+    // Prepare argments 
+    FrameBufferInfo info = {
+        GOP->Mode->FrameBufferBase,
+        GOP->Mode->Info->HorizontalResolution,
+        GOP->Mode->Info->VerticalResolution,
+        GOP->Mode->Info->PixelsPerScanLine
+    };
+
+    switch(GOP->Mode->Info->PixelFormat) {
+        case PixelRedGreenBlueReserved8BitPerColor:
+            info.pixel_format = kPixelRedGreenBlueReserved8BitPerColor;
+            break;
+
+        case PixelBlueGreenRedReserved8BitPerColor:
+            info.pixel_format = kPixelBlueGreenRedReserved8BitPerColor;
+            break;
+        
+        default:
+            puts(L"Unsupported PixelFormat\r\n");
+            while(1) asm volatile("hlt");
+
+    }
 
     // Start Kernel
-    entry_point(GOP->Mode->FrameBufferBase, GOP->Mode->FrameBufferSize);
+    entry_point(&info);
     
     while(1) asm volatile("hlt");
 }

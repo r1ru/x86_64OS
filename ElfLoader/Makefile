@@ -10,7 +10,7 @@ BOOTX64.EFI: ElfLoader.o $(LIBPATH)/UefiLib.a
 	$(LD) $(LDFLAGS) /entry:UefiMain /out:$@ $^
 
 ElfLoader.o : ElfLoader.c
-	$(CC) $(CFLAGS) -I$(INLCLUDEPATH) -c -o $@ $<
+	$(CC) $(CFLAGS) -I$(INLCLUDEPATH) -I../Kernel/Include -c -o $@ $<
 
 $(LIBPATH)/UefiLib.a :
 	make -C $(LIBPATH)
