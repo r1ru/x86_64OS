@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct __kva_list_tag {
+typedef struct {
     uint32_t    gp_offset; // offset in bytes from reg_save_area to the next available general porpose argment register
     uint32_t    fp_offset; // offset in bytes from reg_save_area to the next available floating point argment register
     uint64_t    overflow_arg_area; // pointer used to fetch argments passed on stack
@@ -12,8 +12,9 @@ typedef struct __kva_list_tag {
 
 typedef __kbuiltin_va_list kva_list;
 
-void __kbuiltin_va_start(struct __kva_list_tag *ap, uint64_t n);
-uint64_t __kbuiltin_va_arg(struct __kva_list_tag *ap);
+void __kbuiltin_va_start(__kbuiltin_va_list ap, uint64_t n);
+uint64_t __kbuiltin_va_arg(__kbuiltin_va_list ap);
 
-// TODO: kstdarg.hに切り出す
+// TODO: kstdarg.hに切り出す, kva_copyを実装する
+
 #endif 

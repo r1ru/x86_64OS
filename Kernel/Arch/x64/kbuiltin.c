@@ -1,5 +1,5 @@
 #include <kbuiltin.h>
-#include <stdio.h>
+
 /* TODO:   
 * ・originalのva_startのように最後の引数を受け取り、可変長引数の前に複数の引数を取れるようにする
 * ・6つ以上の引数も取れるようにする
