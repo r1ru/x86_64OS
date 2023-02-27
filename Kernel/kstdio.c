@@ -49,6 +49,7 @@ static void out(struct cookie *c, const char *s, unsigned int l) {
     kmemcpy(c->s, s, l);
     c->s += l;
     c->n -= l;
+    *c->s = 0; // null terminate
 }   
 
 static void pad(struct cookie *cookie, char c, int w, int l, int fl) {
@@ -225,4 +226,18 @@ int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_l
     return printf_core(&c, fmt, ap);
 }
 
-// TODO: kprintfを実装する
+// TODO: consoleを実装する。WriteAsciiで小文字の場合は大文字で表示するように変える。
+int kprintf(const char *fmt, ...) {
+    char buf[BUF_SIZE];
+    kva_list ap;
+    int n;
+    static int y = 40;
+    
+    __builtin_va_start(ap, 1);
+    n = kvsnprintf(buf, BUF_SIZE, fmt, ap);
+
+    WriteString(50, y, buf, &white);
+    y += 10;
+
+    return n;
+}

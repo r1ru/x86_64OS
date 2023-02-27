@@ -2,7 +2,7 @@
 #define __KERNEL_H__
 
 #include <graphics.h>
-#include <font.h>
+#include <kstdio.h>
 
 typedef void EntryPointType(FrameBufferInfo *info);
 

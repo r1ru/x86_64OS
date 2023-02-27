@@ -1,4 +1,4 @@
-#include "kernel.h"
+#include <kernel.h>
 
 void _start(FrameBufferInfo *info) {
     asm volatile(
@@ -21,9 +21,9 @@ void KernelMain(FrameBufferInfo *info) {
         }
     }
 
-    WriteString(50, 40, "HELLO WORLD!", &white);
-    WriteAscii(50, 50, 'A', &white);
-    WriteAscii(58, 50, 'A', &white);
+    
+    kprintf("%d, %#08X, %u\n", 1 + 2, 0xDEADBEEF, 16);
+    kprintf("%s\n", "HELLO WORLD!");
 
     while(1) asm volatile("hlt");
 }
