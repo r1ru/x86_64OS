@@ -4,7 +4,7 @@
 #include <graphics.h>
 
 #define FONT_WIDTH 8
-#define FONT_HEIGHT 10
+#define FONT_HEIGHT 16
 
 extern const uint8_t font_bitmap[][FONT_HEIGHT];
 void WriteAscii(const int x, const int y, const char c, const Pixel * const color);

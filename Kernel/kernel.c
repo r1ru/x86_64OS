@@ -21,9 +21,13 @@ void KernelMain(FrameBufferInfo *info) {
         }
     }
 
+    int i = 0;
+    for(uint8_t c = '!'; c <= '~'; c++, i++) {
+        WriteAscii(8 * i, 50, c, &white);
+    }
     
-    kprintf("%d, %#08X, %u\n", 1 + 2, 0xDEADBEEF, 16);
-    kprintf("%s\n", "HELLO WORLD!");
+    kprintf("%s", "HELLO WORLD!");
+    kprintf("%d + %d = %d", 1, 2, 3);
 
     while(1) asm volatile("hlt");
 }

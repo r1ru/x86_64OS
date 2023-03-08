@@ -231,13 +231,13 @@ int kprintf(const char *fmt, ...) {
     char buf[BUF_SIZE];
     kva_list ap;
     int n;
-    static int y = 40;
+    static int y = 66;
     
     __builtin_va_start(ap, 1);
     n = kvsnprintf(buf, BUF_SIZE, fmt, ap);
 
-    WriteString(50, y, buf, &white);
-    y += 10;
+    WriteString(0, y, buf, &white);
+    y += FONT_HEIGHT;
 
     return n;
 }
