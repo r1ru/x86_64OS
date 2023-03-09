@@ -14,6 +14,6 @@ struct cookie {
 };
 
 int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_list ap);
-int kprintf(const char *fmt, ...);
+int printk(const char *fmt, ...);
 
 #endif 

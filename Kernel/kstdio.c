@@ -226,8 +226,7 @@ int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_l
     return printf_core(&c, fmt, ap);
 }
 
-// TODO: consoleを実装する。WriteAsciiで小文字の場合は大文字で表示するように変える。
-int kprintf(const char *fmt, ...) {
+int printk(const char *fmt, ...) {
     char buf[BUF_SIZE];
     kva_list ap;
     int n;

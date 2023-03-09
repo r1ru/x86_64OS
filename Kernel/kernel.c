@@ -22,7 +22,7 @@ void KernelMain(FrameBufferInfo *info) {
     }
 
     for(int i = 0; i < 27; i++)
-        kprintf("Line%d\n", i);
+        printk("Line%d\n", i);
     
     while(1) asm volatile("hlt");
 }
