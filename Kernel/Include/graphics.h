@@ -29,6 +29,7 @@ typedef struct {
 
 extern const Pixel blue;
 extern const Pixel white;
+extern const Pixel black;
 extern void (*WritePixel)(const int x, const int y, const Pixel * const color);
 
 void InitializeGraphics(FrameBufferInfo *info);

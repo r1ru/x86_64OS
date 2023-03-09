@@ -4,6 +4,7 @@
 #include <font.h>
 #include <kbuiltin.h>
 #include <kstring.h>
+#include <console.h>
 #include <stddef.h>
 #include <stdint.h>
 

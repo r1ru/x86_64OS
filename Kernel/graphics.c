@@ -6,6 +6,7 @@ void (*WritePixel)(const int x, const int y, const Pixel * const color) = NULL;
 
 const Pixel blue  = {0xff, 0, 0};
 const Pixel white = {0xff, 0xff, 0xff};
+const Pixel black = {0x00, 0x00, 0x00};
 
 static void _writePixelRGB(const int x, const int y, const Pixel * const color) {
     const int idx = frame_buffer->pixels_per_scanline * y + x;
