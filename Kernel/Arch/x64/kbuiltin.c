@@ -2,7 +2,6 @@
 
 /* TODO:   
 * ・originalのva_startのように最後の引数を受け取り、可変長引数の前に複数の引数を取れるようにする
-* ・6つ以上の引数も取れるようにする
 * ・floating point registerを使えるようにする? 
 */
 
@@ -24,13 +23,16 @@ void __kbuiltin_va_start(__kbuiltin_va_list ap, uint64_t n) {
     );
 }
 
+// floating point registerの使用は想定されていない
 uint64_t __kbuiltin_va_arg(__kbuiltin_va_list ap) {
     if(ap->gp_offset < 48){
         ap->gp_offset += 8;
         return *(uint64_t *)(ap->reg_save_area + (ap->gp_offset - 8));
     }
-    else 
-        while(1) __asm__ volatile("hlt");
+    else {
+        // これはx64だから動くコード。x86だと型名が必要になる。
+        return *(uint64_t *)(ap->overflow_arg_area)++;
+    }
 }
 
 
