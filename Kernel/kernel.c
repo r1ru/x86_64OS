@@ -21,8 +21,8 @@ void KernelMain(FrameBufferInfo *info) {
         }
     }
 
-    for(int i = 0; i < 27; i++)
-        printk("Line%d\n", i);
+    // PCI bus上の全てのデバイスを列挙
+    scanAllBus();
     
     while(1) asm volatile("hlt");
 }
