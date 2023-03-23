@@ -89,6 +89,19 @@ static void scanFunc(uint8_t bus, uint8_t dev, uint8_t func) {
             sub,
             interface
         );
+        // xHCだった場合
+        if(base == 0x0c && sub == 0x03 && interface == 0x30) {
+            xhcDev.bus = bus;
+            xhcDev.dev = dev;
+            xhcDev.func = func;
+            printk(
+                "Found xHCI @(%d.%d.%d) vendorId: %#x\n",
+                bus,
+                dev, 
+                func, 
+                vendorId
+            );
+        }
     }
 }
 

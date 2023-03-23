@@ -2,6 +2,7 @@
 #define __PCI_H__
 
 #include <asmfunc.h>
+#include <xhcDriver.h>
 #include <kstdio.h>
 
 #include <stdint.h>
