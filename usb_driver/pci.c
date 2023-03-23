@@ -12,29 +12,25 @@ CONFIG_ADDRESS(0x0cf8):
     | Enable bit | reserved | bus number(0-0xff) | dev number(0-0x0f) | func number(0-0x7) | reg offset(4byte単位) |
 */
 
-static inline uint32_t makeAddress(uint8_t bus, uint8_t dev, uint8_t func, uint8_t reg_offset) {
+uint32_t makeAddress(uint8_t bus, uint8_t dev, uint8_t func, uint8_t reg_offset) {
     return shl(1, 31) | shl(bus, 16) | shl(dev, 11) | shl(func, 8) | (reg_offset & 0xfcu);
 }
 
-// write address to CONFIG_ADDRESS
-static void writeAddress(uint32_t address) {
+// write data to specified addres
+void writeData(uint32_t address, uint32_t data) {
     ioOut32(ConfigAddres, address);
-}
-
-// write data to CONFIG_DATA
-static void writeData(uint32_t data) {
     ioOut32(ConfigData, data);
 }
 
-// read data from CONFIG_DATA
-static uint32_t readData(void) {
+// read data from specified address
+uint32_t readData(uint32_t address) {
+    ioOut32(ConfigAddres, address);
     return ioIn32(ConfigData);
 }
 
 // read VendorId
 static uint16_t readVendorId(uint8_t bus, uint8_t dev, uint8_t func) {
-    writeAddress(makeAddress(bus, dev, func, 0x00));
-    return readData() & 0xffffu; // enable lower 16 bits
+    return readData(makeAddress(bus, dev, func, 0x00)) & 0xffffu; // enable lower 16 bits
 }
 
 /*
@@ -45,13 +41,11 @@ header_type:
 */
 
 static uint32_t readClassId(uint8_t bus, uint8_t dev, uint8_t func) {
-    writeAddress(makeAddress(bus, dev, func, 0x08));
-    return readData();
+    return readData(makeAddress(bus, dev, func, 0x08));
 }
 
 static uint8_t readHeaderType(uint8_t bus, uint8_t dev, uint8_t func) {
-    writeAddress(makeAddress(bus, dev, func, 0x0c));
-    return (readData() >> 16) & 0xffu; 
+    return (readData(makeAddress(bus, dev, func, 0x0c)) >> 16) & 0xffu;
 }
 
 /*
@@ -61,8 +55,7 @@ static uint8_t readHeaderType(uint8_t bus, uint8_t dev, uint8_t func) {
         | - | - | Secondary Bus Number | Primary Bus Number | 
 */
 static uint32_t readBusNumber(uint8_t bus, uint8_t dev, uint8_t func) {
-    writeAddress(makeAddress(bus, dev, func, 0x18));
-    return readData();
+    return readData(makeAddress(bus, dev, func, 0x18));
 }
 
 // header_typeのbit8が立っている場合はmultiFunctionDevice
