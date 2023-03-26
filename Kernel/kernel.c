@@ -23,6 +23,8 @@ void KernelMain(FrameBufferInfo *info) {
 
     // PCI bus上の全てのデバイスを列挙
     scanAllBus();
+
+    initXhc();
     
     while(1) asm volatile("hlt");
 }

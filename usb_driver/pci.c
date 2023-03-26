@@ -131,7 +131,7 @@ static void scanBus(uint8_t bus) {
 }
 
 void scanAllBus(void) {
-    uint8_t headerType = readHeaderType(0, 0, 0); // Hos bridgeのheaderを読む
+    uint8_t headerType = readHeaderType(0, 0, 0); // Host bridgeのheaderを読む
     printk("Host bridge header type: %#x\n", headerType);
     if(isSingleFunctionDevice(headerType)){
         scanBus(0);
