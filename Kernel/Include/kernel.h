@@ -5,6 +5,7 @@
 #include <kstdio.h>
 #include <console.h>
 #include <pci.h>
+#include <usbError.h>
 
 typedef void EntryPointType(FrameBufferInfo *info);
 

@@ -24,7 +24,17 @@ void KernelMain(FrameBufferInfo *info) {
     // PCI bus上の全てのデバイスを列挙
     scanAllBus();
 
-    initXhc();
+    UsbError err = initXhc();
+
+    switch (err) {
+        case xHCResetCompleted:
+            printk("xHC Reset Completed\n");
+            goto hlt;
+        case xHCNotHalted:
+            printk("[Error] xHC Not Halted\n");
+            goto hlt;
+    }
     
+    hlt:
     while(1) asm volatile("hlt");
 }

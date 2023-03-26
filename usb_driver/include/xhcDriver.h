@@ -2,6 +2,7 @@
 #define __XHC_DRIVER_H__
 
 #include <pci.h>
+#include <usbError.h>
 
 typedef struct {
     uint8_t bus;
@@ -60,6 +61,6 @@ typedef struct __attribute__((packed)) {
 
 extern Device xhcDev;
 
-int initXhc(void);
+UsbError initXhc(void);
 
 #endif 
