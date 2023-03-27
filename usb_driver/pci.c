@@ -5,6 +5,8 @@
 #define ConfigAddres 0x0cf8
 #define ConfigData 0x0cfc
 
+static int NumDevice;
+
 /*
 CONFIG_ADDRESS(0x0cf8):
     |   31 | 30:24 | 23:16 | 15:11 | 10:8 | 7:0 |
@@ -102,6 +104,7 @@ static void scanFunc(uint8_t bus, uint8_t dev, uint8_t func) {
                 vendorId
             );
         }
+        NumDevice++;
     }
 }
 
@@ -130,7 +133,7 @@ static void scanBus(uint8_t bus) {
     }
 }
 
-void scanAllBus(void) {
+int scanAllBus(void) {
     uint8_t headerType = readHeaderType(0, 0, 0); // Host bridgeのheaderを読む
     printk("Host bridge header type: %#x\n", headerType);
     if(isSingleFunctionDevice(headerType)){
@@ -143,4 +146,5 @@ void scanAllBus(void) {
             scanBus(func);
         }
     }
+    return NumDevice;
 }

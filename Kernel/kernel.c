@@ -21,10 +21,10 @@ void KernelMain(FrameBufferInfo *info) {
         }
     }
 
-    // PCI bus上の全てのデバイスを列挙
-    scanAllBus();
+    int NumDevice = scanAllBus();
+    printk("NumDevice: %#x\n", NumDevice);
 
-    UsbError err = initXhc();
+    UsbError err = initXhc(NumDevice);
 
     switch (err) {
         case xHCResetCompleted:
