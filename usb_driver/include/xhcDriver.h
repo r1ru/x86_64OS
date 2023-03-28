@@ -96,6 +96,35 @@ typedef struct __attribute__((packed)) {
     } CONFIG;
 } OperationalRegisters;
 
+// Runtime Registers defined on p.424
+typedef struct __attribute__((packed)) {
+    struct __attribute__((packed)) {
+        uint8_t     IP      : 1;
+        uint8_t     IE      : 1;
+        uint32_t    Rsvd    : 30;   
+    } IMAN;
+    struct __attribute__((packed)) {
+        uint16_t    IMODI   : 16;
+        uint16_t    IMODC   : 16;
+    } IMOD;
+    // Event Ring Registers
+    struct __attribute__((packed)) {
+        uint16_t    EventRingSegmentTableSize   : 16;
+        uint16_t    Rsvd                        : 16;
+    } ERSTSZ;
+    uint32_t    Rsvd;
+    struct __attribute__((packed)) {
+        uint8_t     Rsvd                                        : 6;
+        uint64_t    EventRingSegmentTableBaseAddressRegister    : 58;
+    } ERSTBA;
+    // 下位4bitsが別の目的に使われているのはTRBのサイズが16byteだから
+    struct __attribute__((packed)) {
+        uint8_t     DESI                    : 3;
+        uint8_t     EHB                     : 1;
+        uint64_t    EventRingDequeuePointer : 60;
+    } ERDP;
+} InterrupterRegisterSet;
+
 extern Device xhcDev;
 
 UsbError initXhc(int NumDevice);

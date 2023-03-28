@@ -2,7 +2,7 @@
 #define __USB_ERROR_H__
 
 typedef enum{
-    xHCResetCompleted,
+    xHCSetupCompleted,
     xHCNotHalted
 } UsbError;
 

@@ -2,9 +2,13 @@
 
 Device xhcDev;
 
+#define ERSEG_SIZE 0x10
+
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
 alignas(64) CommandRing cr;
+alignas(64) TRB er_segment[ERSEG_SIZE];
+alignas(64) EventRingSegmentTableEntry  erst[1];
 
 /*
 BAR:
@@ -23,12 +27,14 @@ UsbError initXhc(int NumDevice) {
     CapabilityRegistes *CapRegs = (CapabilityRegistes *)mmioBase;
     OperationalRegisters *OperationalRegs = (OperationalRegisters *)(mmioBase + CapRegs->CAPLENGTH);
     
+    // xHCの初期化
     if(!OperationalRegs->USBSTS.HCH)
         return xHCNotHalted;
 
     OperationalRegs->USBCMD.HCRST = 1;
     while(OperationalRegs->USBCMD.HCRST);
     while(OperationalRegs->USBSTS.CNR);
+    printk("xHC reset completed\n");
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
     printk("MaxSlots: %#x\n", CapRegs->HCSPARAMS1.MaxSlots);
@@ -40,6 +46,17 @@ UsbError initXhc(int NumDevice) {
     cr.writeIdx = 0;
     OperationalRegs->CRCR.CommandRingPointer = (uint64_t)&cr >> 6;
     OperationalRegs->CRCR.RCS = cr.PCS;
+    printk("command ring setup completed\n");
 
-    return xHCResetCompleted;
+    // Event Ringの設定(Primary Interrupter)
+    erst[0].RingSegmentBaseAddress = (uint64_t)&er_segment << 6;
+    erst[0].RingSegmentSize = ERSEG_SIZE;
+    InterrupterRegisterSet *IR0 = (InterrupterRegisterSet *)(mmioBase + CapRegs->RTSOFF + 0x20);
+    printk("IR0(Primary Interrupter Register Set)@%p\n", IR0);
+    IR0->ERSTSZ.EventRingSegmentTableSize = 1;
+    IR0->ERSTBA.EventRingSegmentTableBaseAddressRegister = (uint64_t)erst << 6;
+    IR0->ERDP.EventRingDequeuePointer = (uint64_t)&er_segment << 4;
+    printk("event ring setup completed\n");
+
+    return xHCSetupCompleted;
 }
