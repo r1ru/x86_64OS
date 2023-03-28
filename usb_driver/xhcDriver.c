@@ -4,6 +4,7 @@ Device xhcDev;
 
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
+alignas(64) CommandRing cr;
 
 /*
 BAR:
@@ -33,6 +34,12 @@ UsbError initXhc(int NumDevice) {
     printk("MaxSlots: %#x\n", CapRegs->HCSPARAMS1.MaxSlots);
     OperationalRegs->CONFIG.MaxSlotsEn = NumDevice;
     OperationalRegs->DCBAAP.DeviceContextBaseAddressArrayPointer = (uint64_t)dcabaa >> 6;
+
+    // Command Ringの設定
+    cr.PCS = 1;
+    cr.writeIdx = 0;
+    OperationalRegs->CRCR.CommandRingPointer = (uint64_t)&cr >> 6;
+    OperationalRegs->CRCR.RCS = cr.PCS;
 
     return xHCResetCompleted;
 }

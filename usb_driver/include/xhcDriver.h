@@ -6,6 +6,7 @@
 #include <stdalign.h>
 #include <macros.h>
 #include <devContext.h>
+#include <ring.h>
 
 typedef struct {
     uint8_t bus;
