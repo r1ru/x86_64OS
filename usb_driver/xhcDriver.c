@@ -7,7 +7,7 @@ Device xhcDev;
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
 alignas(64) CommandRing cr;
-alignas(64) TRB er_segment[ERSEG_SIZE];
+alignas(64) EventRing er;
 alignas(64) EventRingSegmentTableEntry  erst[1];
 
 /*
@@ -49,14 +49,23 @@ UsbError initXhc(int NumDevice) {
     printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
-    erst[0].RingSegmentBaseAddress = (uint64_t)&er_segment << 6;
+    er.CCS = 1; // Event Ring`s PCS initialized to 1
+    er.readIdx = 0;
+    erst[0].RingSegmentBaseAddress = (uint64_t)&er.er_segment << 6;
     erst[0].RingSegmentSize = ERSEG_SIZE;
     InterrupterRegisterSet *IR0 = (InterrupterRegisterSet *)(mmioBase + CapRegs->RTSOFF + 0x20);
     printk("IR0(Primary Interrupter Register Set)@%p\n", IR0);
     IR0->ERSTSZ.EventRingSegmentTableSize = 1;
     IR0->ERSTBA.EventRingSegmentTableBaseAddressRegister = (uint64_t)erst << 6;
-    IR0->ERDP.EventRingDequeuePointer = (uint64_t)&er_segment << 4;
+    IR0->ERDP.EventRingDequeuePointer = (uint64_t)&er.er_segment << 4;
     printk("event ring setup completed\n");
 
+    // start xHC 
+    OperationalRegs->USBCMD.R_S = 1;
+    while(OperationalRegs->USBSTS.HCH);
+    printk("xHC started\n");
+
+    // No Op Commandを送ってみる
+    
     return xHCSetupCompleted;
 }
