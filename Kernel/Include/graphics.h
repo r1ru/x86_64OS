@@ -1,10 +1,9 @@
 #ifndef __GRAPHICS_H__
 #define __GRAPHICS_H__
 
+#include <stddef.h>
 #include <stdint.h>
 #include <Protocol/GraphicsOutput.h>
-
-#define NULL    (void*)0
 
 // PixelFormat supported by kernel
 typedef enum {

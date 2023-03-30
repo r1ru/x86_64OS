@@ -18,41 +18,33 @@ BAR:
 
 64bitの場合、BAR0には下位32bit、BAR1には上位32bitが入る。BAR0は下位4bitをマスクして使う */
 UsbError initXhc(int NumDevice) {
-    // TODO: BARを読む処理を関数に切り出す
-    uint32_t lower = readData(makeAddress(xhcDev.bus, xhcDev.dev, xhcDev.func, 0x10)) & 0xfffffff0u; // mask lower 4bits
-    uint64_t upper = readData(makeAddress(xhcDev.bus, xhcDev.dev, xhcDev.func, 0x14));
-    uint64_t mmioBase = (upper << 32) | lower;
-    printk("mmioBase: %#x\n", mmioBase);
+    saveRegs();
 
-    CapabilityRegistes *CapRegs = (CapabilityRegistes *)mmioBase;
-    OperationalRegisters *OperationalRegs = (OperationalRegisters *)(mmioBase + CapRegs->CAPLENGTH);
-    printk("CAPLENGTH: %#x OperationalRegs@ %#x\n", CapRegs->CAPLENGTH, OperationalRegs);
-    
     // xHCの初期化
-    if(!OperationalRegs->USBSTS.bits.HCH)
+    if(!op->USBSTS.bits.HCH)
         return xHCNotHalted;
 
-    USBCMDBitmap usbcmd = (USBCMDBitmap)OperationalRegs->USBCMD.data;
+    USBCMDBitmap usbcmd = (USBCMDBitmap)op->USBCMD.data;
     usbcmd.bits.HCRST = 1;
-    OperationalRegs->USBCMD.data = usbcmd.data;
-    while(OperationalRegs->USBCMD.bits.HCRST);
-    while(OperationalRegs->USBSTS.bits.CNR);
+    op->USBCMD.data = usbcmd.data;
+    while(op->USBCMD.bits.HCRST);
+    while(op->USBSTS.bits.CNR);
     printk("xHC reset completed\n");
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
-    printk("MaxSlots: %#x\n", CapRegs->HCSPARAMS1.bits.MaxSlots);
-    CONFIGBitmap config = (CONFIGBitmap)OperationalRegs->CONFIG.data;
+    printk("MaxSlots: %#x\n", cap->HCSPARAMS1.bits.MaxSlots);
+    CONFIGBitmap config = (CONFIGBitmap)op->CONFIG.data;
     config.bits.MaxSlotsEn = NumDevice;
-    OperationalRegs->CONFIG.data = config.data;
-    OperationalRegs->DCBAAP.data = (uint64_t)dcabaa;
+    op->CONFIG.data = config.data;
+    op->DCBAAP.data = (uint64_t)dcabaa;
 
     // Command Ringの設定
     cr.PCS = 1;
     cr.writeIdx = 0;
-    CRCRBitmap crcr = (CRCRBitmap)OperationalRegs->CRCR.data;
+    CRCRBitmap crcr = (CRCRBitmap)op->CRCR.data;
     crcr.bits.CommandRingPointer = (uint64_t)cr.buf >> 6;
     crcr.bits.RCS = cr.PCS;
-    OperationalRegs->CRCR.data = crcr.data;
+    op->CRCR.data = crcr.data;
     printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
@@ -60,7 +52,7 @@ UsbError initXhc(int NumDevice) {
     er.readIdx = 0;
     erst[0].RingSegmentBaseAddress = (uint64_t)er.er_segment >> 6;
     erst[0].RingSegmentSize = ERSEG_SIZE;
-    InterrupterRegisterSet *IR0 = (InterrupterRegisterSet *)(mmioBase + CapRegs->RTSOFF + 0x20);
+    InterrupterRegisterSet *IR0 = (InterrupterRegisterSet *)intr;
     printk("IR0(Primary Interrupter Register Set)@%p\n", IR0);
     ERSTSZBitmap erstsz = (ERSTSZBitmap)IR0->ERSTSZ.data;
     erstsz.bits.EventRingSegmentTableSize = 1;
@@ -74,10 +66,10 @@ UsbError initXhc(int NumDevice) {
     printk("event ring setup completed\n");
 
     // start xHC 
-    usbcmd = (USBCMDBitmap)OperationalRegs->USBCMD.data;
+    usbcmd = (USBCMDBitmap)op->USBCMD.data;
     usbcmd.bits.R_S = 1;
-    OperationalRegs->USBCMD.data = usbcmd.data;
-    while(OperationalRegs->USBSTS.bits.HCH);
+    op->USBCMD.data = usbcmd.data;
+    while(op->USBSTS.bits.HCH);
     printk("xHC started\n");
 
     // Send NoOpCommand ref p.107 (TODO: 初期化処理から分離する)
@@ -88,7 +80,7 @@ UsbError initXhc(int NumDevice) {
     cmd->C = cr.PCS;
     cr.writeIdx++;
 
-    DoorBellRegister *dbreg = (DoorBellRegister *)(mmioBase + CapRegs->DBOFF);
+    DoorBellRegister *dbreg = db;
     printk("Doobell Register0@%p\n", dbreg);
     dbreg->data = 0;
     printk("No Op Command Requeseted\n");

@@ -2,6 +2,9 @@
 #define __REGISTERS_H__
 
 #include <stdint.h>
+#include <stddef.h>
+#include <kstdio.h>
+#include <pci.h>
 
 // Software shoud write following registers using unly "Dword Access"
 // If the register is 64-bit, software can also use "Qword Access" 
@@ -210,5 +213,14 @@ typedef union{
         uint16_t    DBStreamId  : 16;
     } bits;
 } DoorBellRegister;
+
+// holds a pointer to each register as a global variable
+// these pointer can be used after saveRegs called
+extern CapabilityRegistes       *cap;
+extern OperationalRegisters     *op;
+extern InterrupterRegisterSet   *intr;
+extern DoorBellRegister         *db;
+
+void saveRegs(void);
 
 #endif 

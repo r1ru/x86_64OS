@@ -8,10 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-uint32_t makeAddress(uint8_t bus, uint8_t dev, uint8_t func, uint8_t reg_offset);
-void writeData(uint32_t address, uint32_t data);
-uint32_t readData(uint32_t address);
-
+uint64_t readBAR(uint8_t bus, uint8_t dev, uint8_t func);
 int scanAllBus(void);
 
 #endif 

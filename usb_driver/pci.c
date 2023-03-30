@@ -7,55 +7,57 @@
 
 static int NumDevice;
 
-/*
-CONFIG_ADDRESS(0x0cf8):
-    |   31 | 30:24 | 23:16 | 15:11 | 10:8 | 7:0 |
-    | ---- | ---- | ---- | ---- | ---- | ---- |
-    | Enable bit | reserved | bus number(0-0xff) | dev number(0-0x0f) | func number(0-0x7) | reg offset(4byte単位) |
-*/
-
-uint32_t makeAddress(uint8_t bus, uint8_t dev, uint8_t func, uint8_t reg_offset) {
+// CONFIG_ADDRESS(0x0cf8):
+//  |   31 | 30:24 | 23:16 | 15:11 | 10:8 | 7:0 |
+//  | ---- | ---- | ---- | ---- | ---- | ---- |
+//  | Enable bit | reserved | bus number(0-0xff) | dev number(0-0x0f) | func number(0-0x7) | reg offset(4byte単位) |
+static uint32_t makeAddress(uint8_t bus, uint8_t dev, uint8_t func, uint8_t reg_offset) {
     return shl(1, 31) | shl(bus, 16) | shl(dev, 11) | shl(func, 8) | (reg_offset & 0xfcu);
 }
 
-// write data to specified addres
-void writeData(uint32_t address, uint32_t data) {
+// writeData write data to specified addres
+static void writeData(uint32_t address, uint32_t data) {
     ioOut32(ConfigAddres, address);
     ioOut32(ConfigData, data);
 }
 
-// read data from specified address
-uint32_t readData(uint32_t address) {
+// readData read data from specified address
+static uint32_t readData(uint32_t address) {
     ioOut32(ConfigAddres, address);
     return ioIn32(ConfigData);
 }
 
-// read VendorId
 static uint16_t readVendorId(uint8_t bus, uint8_t dev, uint8_t func) {
     return readData(makeAddress(bus, dev, func, 0x00)) & 0xffffu; // enable lower 16 bits
 }
-
-/*
-header_type:
-    | 31:24 | 23:16 | 15:8 | 
-    | ---- | ---- | ---- |
-    | BaseClass | SubClass | ProgrammingInterface |
-*/
 
 static uint32_t readClassId(uint8_t bus, uint8_t dev, uint8_t func) {
     return readData(makeAddress(bus, dev, func, 0x08));
 }
 
+// header_type:
+//  | 31:24 | 23:16 | 15:8 | 
+//  | ---- | ---- | ---- |
+//  | BaseClass | SubClass | ProgrammingInterface |
 static uint8_t readHeaderType(uint8_t bus, uint8_t dev, uint8_t func) {
     return (readData(makeAddress(bus, dev, func, 0x0c)) >> 16) & 0xffu;
 }
 
-/*
-    @0x18:
-        | 31:24 | 23:16 | 15:8 | 7:0 | 
-        | ---- | ---- | ---- | ---- | 
-        | - | - | Secondary Bus Number | Primary Bus Number | 
-*/
+//  BAR:
+//  | 31:4 | 3 | 2:1 | 0 |
+//  | ---- | ---- | ---- | ---- |
+//  | base address | prefetch enable flag | type | メモリ空間インジケータ
+//  64bitの場合、BAR0には下位32bit、BAR1には上位32bitが入る。BAR0は下位4bitをマスクして使う
+uint64_t readBAR(uint8_t bus, uint8_t dev, uint8_t func) {
+    uint32_t lower = readData(makeAddress(bus, dev, func, 0x10)) & 0xfffffff0u; // mask lower 4bits
+    uint64_t upper = readData(makeAddress(bus, dev, func, 0x14));
+    return (upper << 32) | lower;
+}
+
+// @0x18:
+//  | 31:24 | 23:16 | 15:8 | 7:0 | 
+//  | ---- | ---- | ---- | ---- | 
+//  | - | - | Secondary Bus Number | Primary Bus Number | 
 static uint32_t readBusNumber(uint8_t bus, uint8_t dev, uint8_t func) {
     return readData(makeAddress(bus, dev, func, 0x18));
 }
@@ -126,7 +128,7 @@ static void scanDev(uint8_t bus, uint8_t dev) {
     }
 }
 
-// 一つのバスにつき最大32このデバイスが接続される。
+// 一つのバスにつき最大32個のデバイスが接続される。
 static void scanBus(uint8_t bus) {
     for(uint8_t dev = 0; dev < 32; dev++) {
         scanDev(bus, dev);
