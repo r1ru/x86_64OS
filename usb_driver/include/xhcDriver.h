@@ -15,6 +15,7 @@ typedef struct {
     uint8_t func;
 } Device;
 
+// Capability Registers defined on p.381
 typedef struct __attribute__((packed)) {
     uint8_t     CAPLENGTH;
     uint8_t     Rsvd;
@@ -33,6 +34,37 @@ typedef struct __attribute__((packed)) {
     uint32_t    HCCPARAMS2;
     // Rsvd (CAPLENTH - 20h bytes)
 } CapabilityRegistes;
+
+// Operational Registers defined on p.391
+typedef union {
+    uint32_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     MaxSlotsEn  : 8;
+        uint8_t     U3E         : 1;
+        uint8_t     CIE         : 1;
+        uint32_t    Rsvd        : 22;
+    } bits;
+} CONFIGBitmap;
+
+typedef union {
+    uint64_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     Rsvd                                    : 6;
+        uint64_t    DeviceContextBaseAddressArrayPointer    : 58;
+    } bits;
+} DCBAAPBitmap;
+
+typedef union {
+    uint64_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     RCS                 : 1;
+        uint8_t     CS                  : 1;
+        uint8_t     CA                  : 1;
+        uint8_t     CRR                 : 1;
+        uint8_t     Rsvd                : 2;
+        uint64_t    CommandRingPointer  : 58;
+    } bits;
+} CRCRBitmap;
 
 typedef struct __attribute__((packed)) {
     struct __attribute__((packed)) {
@@ -71,33 +103,43 @@ typedef struct __attribute__((packed)) {
         uint16_t    PageSize    : 16;
         uint16_t    Rsvd        : 16;
     } PAGESIZE;
-    uint8_t     Rsvd;
+    uint64_t     Rsvd;
     struct __attribute__((packed)) {
         uint16_t    NotificationEnable  : 16;
         uint16_t    Rsvd                : 16;
     } DNCTRL;
-    struct __attribute__((packed)) {
-        uint8_t     RCS                 : 1;
-        uint8_t     CS                  : 1;
-        uint8_t     CA                  : 1;
-        uint8_t     CRR                 : 1;
-        uint8_t     Rsvd                : 2;
-        uint64_t    CommandRingPointer  : 58;
-    } CRCR;
-    uint16_t    Rsvd;
-    struct __attribute__((packed)) {
-        uint8_t     Rsvd                                    : 6;
-        uint64_t    DeviceContextBaseAddressArrayPointer    : 58;
-    } DCBAAP;
-    struct __attribute__((packed)) {
-        uint8_t     MaxSlotsEn  : 8;
-        uint8_t     U3E         : 1;
-        uint8_t     CIE         : 1;
-        uint32_t    Rsvd        : 22;
-    } CONFIG;
+    CRCRBitmap  CRCR;
+    uint64_t    Rsvd[2];
+    DCBAAPBitmap    DCBAAP;
+    CONFIGBitmap    CONFIG;
 } OperationalRegisters;
 
 // Runtime Registers defined on p.424
+typedef union {
+    uint32_t    data;
+    struct __attribute__((packed)) {
+        uint16_t    EventRingSegmentTableSize   : 16;
+        uint16_t    Rsvd                        : 16;
+    } bits;
+} ERSTSZBitmap;
+
+typedef union {
+    uint64_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     Rsvd                                        : 6;
+        uint64_t    EventRingSegmentTableBaseAddressRegister    : 58;
+    } bits;
+} ERSTBABitmap;
+
+typedef union {
+    uint64_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     DESI                    : 3;
+        uint8_t     EHB                     : 1;
+        uint64_t    EventRingDequeuePointer : 60;
+    } bits;
+} ERDPBitmap;
+
 typedef struct __attribute__((packed)) {
     struct __attribute__((packed)) {
         uint8_t     IP      : 1;
@@ -109,22 +151,22 @@ typedef struct __attribute__((packed)) {
         uint16_t    IMODC   : 16;
     } IMOD;
     // Event Ring Registers
-    struct __attribute__((packed)) {
-        uint16_t    EventRingSegmentTableSize   : 16;
-        uint16_t    Rsvd                        : 16;
-    } ERSTSZ;
-    uint32_t    Rsvd;
-    struct __attribute__((packed)) {
-        uint8_t     Rsvd                                        : 6;
-        uint64_t    EventRingSegmentTableBaseAddressRegister    : 58;
-    } ERSTBA;
+    ERSTSZBitmap    ERSTSZ;
+    uint32_t        Rsvd;
+    ERSTBABitmap    ERSTBA;
     // 下位4bitsが別の目的に使われているのはTRBのサイズが16byteだから
-    struct __attribute__((packed)) {
-        uint8_t     DESI                    : 3;
-        uint8_t     EHB                     : 1;
-        uint64_t    EventRingDequeuePointer : 60;
-    } ERDP;
+    ERDPBitmap      ERDP;
 } InterrupterRegisterSet;
+
+// Doorbell Register defined on p.431
+typedef union{
+    uint32_t data;
+    struct __attribute__((packed)) {
+        uint8_t     DBTarget    : 8;
+        uint8_t     Rsvd        : 8;
+        uint16_t    DBStreamId  : 16;
+    } bits;
+} DoorBellRegister;
 
 extern Device xhcDev;
 
