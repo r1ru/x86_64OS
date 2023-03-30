@@ -5,12 +5,6 @@
 #include <trb.h>
 
 typedef struct {
-    TRB buf[0x10];
-    int PCS; // Producer Cycle State
-    int writeIdx;
-} CommandRing;
-
-typedef struct {
     TRB er_segment[0x10];
     int CCS; // Consumer Cycle State
     int readIdx;

@@ -6,7 +6,6 @@ Device xhcDev;
 
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
-alignas(64) CommandRing cr;
 alignas(64) EventRing er;
 alignas(64) EventRingSegmentTableEntry  erst[1];
 
@@ -39,12 +38,7 @@ UsbError initXhc(int NumDevice) {
     op->DCBAAP.data = (uint64_t)dcabaa;
 
     // Command Ringの設定
-    cr.PCS = 1;
-    cr.writeIdx = 0;
-    CRCRBitmap crcr = (CRCRBitmap)op->CRCR.data;
-    crcr.bits.CommandRingPointer = (uint64_t)cr.buf >> 6;
-    crcr.bits.RCS = cr.PCS;
-    op->CRCR.data = crcr.data;
+    initCommandRing();
     printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
@@ -73,16 +67,11 @@ UsbError initXhc(int NumDevice) {
     printk("xHC started\n");
 
     // Send NoOpCommand ref p.107 (TODO: 初期化処理から分離する)
-    NoOpCommandTRB *cmd = (NoOpCommandTRB *)cr.buf;
-    printk("NoOpCommand@%p\n", cmd);
-    kmemset(cmd, 0, sizeof(NoOpCommandTRB));
-    cmd->TRBType = NoOpCommand;
-    cmd->C = cr.PCS;
-    cr.writeIdx++;
-
-    DoorBellRegister *dbreg = db;
-    printk("Doobell Register0@%p\n", dbreg);
-    dbreg->data = 0;
+    CommandRingError err = pushCommand(NoOpCommand);
+    if(err != CommandRequested) {
+        printk("[error] command request failed\n");
+        while(1) asm volatile("hlt");
+    }
     printk("No Op Command Requeseted\n");
 
     // TODO: 割り込みで処理する

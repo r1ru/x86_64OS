@@ -9,6 +9,7 @@
 #include <ring.h>
 #include <trb.h>
 #include <registers.h>
+#include <commandRing.h>
 
 typedef struct {
     uint8_t bus;

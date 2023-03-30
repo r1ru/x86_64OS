@@ -120,4 +120,22 @@ typedef struct __attribute__((packed)) {
     uint8_t     SlotId                      : 8;
 } CommandCompletionEventTRB;
 
+// Other TRBs defined on p.503
+
+// Link TRB defined on p.503
+typedef struct __attribute__((packed)) {
+    uint8_t     Rsvd                        : 4;
+    uint64_t    RingSegmentPointerHiandLo   : 60;
+    uint32_t    Rsvd                        : 22;
+    uint16_t    InterrupterTarget           : 10;
+    uint8_t     C                           : 1;
+    uint8_t     TC                          : 1;
+    uint8_t     Rsvd                        : 2;
+    uint8_t     CH                          : 1;
+    uint8_t     IOC                         : 1;
+    uint8_t     Rsvd                        : 4;
+    uint8_t     TRBType                     : 6;
+    uint16_t     Rsvd                       : 16;
+} LinkTRB;
+
 #endif 
