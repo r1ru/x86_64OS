@@ -6,10 +6,10 @@
 #include <stdalign.h>
 #include <macros.h>
 #include <devContext.h>
-#include <ring.h>
 #include <trb.h>
 #include <registers.h>
 #include <commandRing.h>
+#include <eventRing.h>
 
 typedef struct {
     uint8_t bus;

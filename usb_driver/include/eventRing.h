@@ -1,11 +1,15 @@
-#ifndef __RING_H__
-#define __RING_H__
+#ifndef __EVENT_RING_H__
+#define __EVENT_RING_H__
 
 #include <stdint.h>
-#include <trb.h>
+#include <stdalign.h>
 
+#include <trb.h>
+#include <registers.h>
+
+#define ERSEGSIZE   0x10
 typedef struct {
-    TRB er_segment[0x10];
+    TRB er_segment[ERSEGSIZE];
     int CCS; // Consumer Cycle State
     int readIdx;
 } EventRing;
@@ -18,5 +22,8 @@ typedef struct __attribute__((packed)){
     uint16_t    Rsvd                    : 16;
     uint32_t    Rsvd                    : 32;
 } EventRingSegmentTableEntry;
+
+void initEventRing(void);
+TRB * popEvent(void);
 
 #endif 
