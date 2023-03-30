@@ -29,16 +29,18 @@ UsbError initXhc(int NumDevice) {
     printk("CAPLENGTH: %#x OperationalRegs@ %#x\n", CapRegs->CAPLENGTH, OperationalRegs);
     
     // xHCの初期化
-    if(!OperationalRegs->USBSTS.HCH)
+    if(!OperationalRegs->USBSTS.bits.HCH)
         return xHCNotHalted;
 
-    OperationalRegs->USBCMD.HCRST = 1;
-    while(OperationalRegs->USBCMD.HCRST);
-    while(OperationalRegs->USBSTS.CNR);
+    USBCMDBitmap usbcmd = (USBCMDBitmap)OperationalRegs->USBCMD.data;
+    usbcmd.bits.HCRST = 1;
+    OperationalRegs->USBCMD.data = usbcmd.data;
+    while(OperationalRegs->USBCMD.bits.HCRST);
+    while(OperationalRegs->USBSTS.bits.CNR);
     printk("xHC reset completed\n");
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
-    printk("MaxSlots: %#x\n", CapRegs->HCSPARAMS1.MaxSlots);
+    printk("MaxSlots: %#x\n", CapRegs->HCSPARAMS1.bits.MaxSlots);
     CONFIGBitmap config = (CONFIGBitmap)OperationalRegs->CONFIG.data;
     config.bits.MaxSlotsEn = NumDevice;
     OperationalRegs->CONFIG.data = config.data;
@@ -72,8 +74,10 @@ UsbError initXhc(int NumDevice) {
     printk("event ring setup completed\n");
 
     // start xHC 
-    OperationalRegs->USBCMD.R_S = 1;
-    while(OperationalRegs->USBSTS.HCH);
+    usbcmd = (USBCMDBitmap)OperationalRegs->USBCMD.data;
+    usbcmd.bits.R_S = 1;
+    OperationalRegs->USBCMD.data = usbcmd.data;
+    while(OperationalRegs->USBSTS.bits.HCH);
     printk("xHC started\n");
 
     // Send NoOpCommand ref p.107 (TODO: 初期化処理から分離する)
