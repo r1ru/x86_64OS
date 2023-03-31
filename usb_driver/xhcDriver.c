@@ -1,7 +1,5 @@
 #include <xhcDriver.h>
 
-Device xhcDev;
-
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
 
@@ -40,6 +38,9 @@ UsbError initXhc(int NumDevice) {
     op->USBCMD.data = usbcmd.data;
     while(op->USBSTS.bits.HCH);
     printk("xHC started\n");
+
+    // Capability Listを表示してみる
+    configureMSI(xhcDev);
 
     // Send NoOpCommand ref p.107 (TODO: 初期化処理から分離する)
     CommandRingError err = pushCommand(NoOpCommand);

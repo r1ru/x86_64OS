@@ -11,14 +11,6 @@
 #include <commandRing.h>
 #include <eventRing.h>
 
-typedef struct {
-    uint8_t bus;
-    uint8_t dev;
-    uint8_t func;
-} Device;
-
-extern Device xhcDev;
-
 UsbError initXhc(int NumDevice);
 
 #endif 

@@ -7,6 +7,8 @@
 
 static int NumDevice;
 
+Device xhcDev;
+
 // CONFIG_ADDRESS(0x0cf8):
 //  |   31 | 30:24 | 23:16 | 15:11 | 10:8 | 7:0 |
 //  | ---- | ---- | ---- | ---- | ---- | ---- |
@@ -149,4 +151,26 @@ int scanAllBus(void) {
         }
     }
     return NumDevice;
+}
+
+// configureMSI expects the MSI Capability will always be present
+void configureMSI(Device dev) {
+    uint32_t base   = makeAddress(dev.bus, dev.dev, dev.func, 0);
+    uint8_t  ptr    = readData(base + 0x34) & 0xffu;
+    uint32_t addr   = base + ptr;
+    
+    HeaderBitmap h  = (HeaderBitmap)readData(addr);
+
+    while(h.bits.CapId != 0x5) {
+        addr = base + h.bits.NxtPtr;
+        h = (HeaderBitmap)readData(addr);
+    }
+
+    printk(
+        "MSI Capability: CapId: %#x NxtPtr: %#x Addr64: %#x PreVectorMasking: %#x\n",
+        h.bits.CapId,
+        h.bits.NxtPtr,
+        h.bits.Addr64Capable,
+        h.bits.PreVectorMaskingCapable
+    );
 }
