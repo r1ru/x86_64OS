@@ -3,13 +3,13 @@
 
 #include <pci.h>
 #include <usbError.h>
-#include <stdalign.h>
-#include <macros.h>
 #include <devContext.h>
-#include <trb.h>
 #include <registers.h>
 #include <commandRing.h>
 #include <eventRing.h>
+#include <interrupt.h>
+
+#include <stdalign.h>
 
 UsbError initXhc(int NumDevice);
 

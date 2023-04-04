@@ -32,39 +32,41 @@ UsbError initXhc(int NumDevice) {
     initEventRing();
     printk("event ring setup completed\n");
 
+    // 割り込みの設定(Primary Interrupter)
+    IMODBitmap imod = (IMODBitmap)intr->IMOD.data;
+    IMANBitmap iman = (IMANBitmap)intr->IMAN.data;
+    imod.bits.IMODI = 4000;
+    iman.bits.IP = 1;
+    iman.bits.IE = 1;
+    intr->IMOD.data = imod.data;
+    intr->IMAN.data = iman.data;
+    usbcmd = (USBCMDBitmap)op->USBCMD.data;
+    usbcmd.bits.INTE = 1;
+    op->USBCMD.data = usbcmd.data;
+    MessageAddressBitmap    msgAddr = {
+        .bits = {
+            .DM = 0,
+            .RH = 0,
+            .DestinationId = (uint8_t)(*((uint32_t *)0xfee00020) >> 24),
+            .OFEEH = 0xfeeu
+        }
+    };
+    MessageDataBitmap       msgData = {
+        .bits = {
+            .TM = 1,
+            .LV = 1,
+            .DM = 0,
+            .Vector = xHCIVector
+        }
+    };
+    configureMSI(xhcDev, msgAddr, msgData);
+
     // start xHC 
     usbcmd = (USBCMDBitmap)op->USBCMD.data;
     usbcmd.bits.R_S = 1;
     op->USBCMD.data = usbcmd.data;
     while(op->USBSTS.bits.HCH);
     printk("xHC started\n");
-
-    // Capability Listを表示してみる
-    configureMSI(xhcDev);
-
-    // Send NoOpCommand ref p.107 (TODO: 初期化処理から分離する)
-    CommandRingError err = pushCommand(NoOpCommand);
-    if(err != CommandRequested) {
-        printk("[error] command request failed\n");
-        while(1) asm volatile("hlt");
-    }
-    printk("No Op Command Requeseted\n");
-
-    // TODO: 割り込みで処理する
-    CommandCompletionEventTRB *trb = (CommandCompletionEventTRB *)popEvent();
-    if(trb->TRBType != CommandCompletionEvent) {
-        printk("[error] unexpected event\n");
-        while(1) asm volatile("hlt");
-    }
-    printk("received TRB\n");
-   
-    printk("CommandCompletionEvent\n");
-    printk(
-        "CommandTRBPointer@%p CompletionCode: %#x C: %#x\n",
-        trb->CommandTRBPointerHiandLo << 4,
-        trb->CompletionCode,
-        trb->C // EventRing`s PCS flag
-    );
 
     return xHCSetupCompleted;
 }
