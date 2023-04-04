@@ -88,13 +88,14 @@ static void scanFunc(uint8_t bus, uint8_t dev, uint8_t func) {
         printk("Found PCI-to-PCI bridge: secondaryBus: %#x\n", secondaryBus);
         scanBus(secondaryBus);
     } else {
+        /*
         printk(
             "%d.%d.%d -> [classId] base: %#x, sub: %#x, interface: %#x\n",
             bus, dev, func,
             base,
             sub,
             interface
-        );
+        );*/
         // xHCだった場合
         if(base == 0x0c && sub == 0x03 && interface == 0x30) {
             xhcDev.bus = bus;
@@ -154,23 +155,32 @@ int scanAllBus(void) {
 }
 
 // configureMSI expects the MSI Capability will always be present
-void configureMSI(Device dev) {
+void configureMSI(Device dev, MessageAddressBitmap msgAddr, MessageDataBitmap msgData) {
     uint32_t base   = makeAddress(dev.bus, dev.dev, dev.func, 0);
     uint8_t  ptr    = readData(base + 0x34) & 0xffu;
     uint32_t addr   = base + ptr;
     
-    HeaderBitmap h  = (HeaderBitmap)readData(addr);
+    HeaderBitmap hdr  = (HeaderBitmap)readData(addr);
 
-    while(h.bits.CapId != 0x5) {
-        addr = base + h.bits.NxtPtr;
-        h = (HeaderBitmap)readData(addr);
+    while(hdr.bits.CapId != 0x5) {
+        addr = base + hdr.bits.NxtPtr;
+        hdr = (HeaderBitmap)readData(addr);
     }
 
     printk(
         "MSI Capability: CapId: %#x NxtPtr: %#x Addr64: %#x PreVectorMasking: %#x\n",
-        h.bits.CapId,
-        h.bits.NxtPtr,
-        h.bits.Addr64Capable,
-        h.bits.PreVectorMaskingCapable
+        hdr.bits.CapId,
+        hdr.bits.NxtPtr,
+        hdr.bits.Addr64Capable,
+        hdr.bits.PreVectorMaskingCapable
     );
+
+    // headerを設定
+    hdr.bits.MSIEnable = 1;
+    hdr.bits.MultipleMessageEnable = 0; // Primary Interrupterのみ
+    writeData(addr, hdr.data);
+    
+    // Message Address, MessageDataを設定
+    writeData(addr + 4, msgAddr.data);
+    writeData(addr + 12, msgData.data);
 }
