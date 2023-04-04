@@ -22,6 +22,24 @@ typedef union {
     } bits;
 } HCSPARAMS1Bitmap;
 
+// DBOFF defined on p.387
+typedef union __attribute__((packed)) {
+    uint32_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     Rsvd                    : 2;
+        uint32_t    DoorBellArrayOffset     : 30;
+    } bits;
+} DBOFFBitmap;
+
+// RTSOFF defined on p.388
+typedef union __attribute__((packed)) {
+    uint32_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     Rsvd                        : 5;
+        uint32_t    RuntimeRegisterSpaceOffset  : 27;
+    } bits;
+} RTSOFFBitmap;
+
 typedef struct __attribute__((packed)) {
     uint8_t             CAPLENGTH;
     uint8_t             Rsvd;
@@ -30,8 +48,8 @@ typedef struct __attribute__((packed)) {
     uint32_t            HCSPARAMS2;
     uint32_t            HCSPARAMS3;
     uint32_t            HCCPARAMS1;
-    uint32_t            DBOFF;
-    uint32_t            RTSOFF;
+    DBOFFBitmap         DBOFF;
+    RTSOFFBitmap        RTSOFF;
     uint32_t            HCCPARAMS2;
     // Rsvd (CAPLENTH - 20h bytes)
 } CapabilityRegistes;

@@ -7,11 +7,10 @@ DoorBellRegister        *db     = NULL;
 
 void saveRegs(void) {
     uint64_t mmioBase = readBAR(xhcDev.bus, xhcDev.dev, xhcDev.func);
-    CapabilityRegistes *capRegs = (CapabilityRegistes *)mmioBase;
-    cap     = capRegs;
-    op      = (OperationalRegisters *)(mmioBase + capRegs->CAPLENGTH);
-    intr    = (InterrupterRegisterSet *)(mmioBase + capRegs->RTSOFF + 0x20);
-    db      = (DoorBellRegister *)(mmioBase + capRegs->DBOFF);
+    cap     = (CapabilityRegistes *)mmioBase;
+    op      = (OperationalRegisters *)(mmioBase + cap->CAPLENGTH);
+    intr    = (InterrupterRegisterSet *)(mmioBase + (cap->RTSOFF.bits.RuntimeRegisterSpaceOffset << 5) + 0x20u);
+    db      = (DoorBellRegister *)(mmioBase + (cap->DBOFF.bits.DoorBellArrayOffset << 2));
     printk(
         "cap: %#x op: %#x intr: %#x db: %#x\n",
         cap,
