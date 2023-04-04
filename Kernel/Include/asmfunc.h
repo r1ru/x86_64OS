@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void loadGDT(uint16_t limit, uint64_t offset);
-void setCS(uint16_t ss);
+void setCSSS(uint16_t cs, uint16_t ss);
 uint16_t getCS(void);
 void _loadIDT(uint16_t limit, uint64_t offset);
 

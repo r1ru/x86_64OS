@@ -12,11 +12,12 @@ loadGDT:
     leave
     ret 
 
-# void setCS(uint16_t ss)
-.global setCS 
-setCS:
+# void setCSSS(uint16_t cs, uint16_t ss)
+.global setCSSS
+setCSSS:
     push rbp
     mov rbp, rsp
+    mov ss, si
     lea rax, .L0[rip]
     push di
     push rax
