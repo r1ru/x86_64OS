@@ -24,6 +24,6 @@ typedef struct __attribute__((packed)){
 } EventRingSegmentTableEntry;
 
 void initEventRing(void);
-TRB * popEvent(void);
+TRB * popEvent(bool *hasNext);
 
 #endif 

@@ -22,22 +22,22 @@ void initEventRing(void) {
     IR0->ERDP.data = erdp.data;
 }
 
-// this function is blocking
-TRB * popEvent(void) {
-    TRB *trb = &er.er_segment[er.readIdx++];
+// Ensure that there is an entry in EventRing before calling popEvent
+TRB * popEvent(bool *hasNext) {
+    TRB *trb = &er.er_segment[er.readIdx];
     InterrupterRegisterSet *IR0 = intr;
 
-    while(trb->C != er.CCS);
-
     // update ERDP
-    if (er.readIdx < ERSEGSIZE) {
-        IR0->ERDP.data += 0x10;
+    if(er.readIdx != ERSEGSIZE - 1) {
         er.readIdx++;
+        IR0->ERDP.data += 0x10;
     } else {
         IR0->ERDP.data = (uint64_t)er.er_segment;
         er.readIdx = 0;
         er.CCS = !er.CCS;
     }
+
+    *hasNext = er.er_segment[er.readIdx].C == er.CCS;
 
     return trb;
 }
