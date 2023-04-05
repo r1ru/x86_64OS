@@ -54,35 +54,11 @@ void KernelMain(FrameBufferInfo *info) {
             continue;
         }
         
-        // TODO: 関数に切り出す
         InterruptMessage msg = popMsg();
-        bool hasNext = false;
-        CommandCompletionEventTRB *trb;
 
         switch(msg.ty) {
             case InterruptXHCI:
-                do {
-                    trb = (CommandCompletionEventTRB *)popEvent(&hasNext);
-
-                    switch (trb->TRBType) {
-                        case CommandCompletionEvent:
-                            printk(
-                                "CommandTRBPointer@%p CompletionCode: %#x C: %#x\n",
-                                trb->CommandTRBPointerHiandLo << 4,
-                                trb->CompletionCode,
-                                trb->C // EventRing`s PCS flag
-                            );
-                            break;
-                        default:
-                            printk(
-                                "TRBType: %#x C: %#x\n",
-                                trb->TRBType,
-                                trb->C
-                            );
-                            break;
-                    }
-                } while (hasNext);
-                break;
+                ProcessEvent();
         }
     }
 }

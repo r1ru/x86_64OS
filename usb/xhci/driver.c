@@ -70,3 +70,34 @@ UsbError initXhc(int NumDevice) {
 
     return ErrxHCSetupCompleted;
 }
+
+static void OnCompletionEvent(CommandCompletionEventTRB *trb) {
+    printk(
+        "CommandTRBPointer@%p CompletionCode: %#x C: %#x\n",
+        trb->CommandTRBPointerHiandLo << 4,
+        trb->CompletionCode,
+        trb->C // EventRing`s PCS flag
+    );
+}
+
+void ProcessEvent(void) {
+    TRB *trb;
+    bool hasNext;
+
+    do {
+        trb = popEvent(&hasNext);
+
+        switch (trb->TRBType) {
+            case CommandCompletionEvent:
+                OnCompletionEvent((CommandCompletionEventTRB *)trb);
+                break;
+            default:
+                printk(
+                    "TRBType: %#x C: %#x\n",
+                    trb->TRBType,
+                    trb->C
+                );
+                break;
+        }
+    } while (hasNext);
+}
