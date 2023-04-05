@@ -8,7 +8,7 @@ UsbError initXhc(int NumDevice) {
 
     // xHCの初期化
     if(!op->USBSTS.bits.HCH)
-        return xHCNotHalted;
+        return ErrxHCNotHalted;
 
     USBCMDBitmap usbcmd = (USBCMDBitmap)op->USBCMD.data;
     usbcmd.bits.HCRST = 1;
@@ -68,5 +68,5 @@ UsbError initXhc(int NumDevice) {
     while(op->USBSTS.bits.HCH);
     printk("xHC started\n");
 
-    return xHCSetupCompleted;
+    return ErrxHCSetupCompleted;
 }

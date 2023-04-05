@@ -33,10 +33,10 @@ void KernelMain(FrameBufferInfo *info) {
     UsbError err = initXhc(NumDevice);
 
     switch (err) {
-        case xHCSetupCompleted:
+        case ErrxHCSetupCompleted:
             printk("xHC setup completed\n");
             break;
-        case xHCNotHalted:
+        case ErrxHCNotHalted:
             printk("[error] xHC not halted\n");
             while(1) asm volatile("cli\n\thlt");
     }
