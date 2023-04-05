@@ -136,7 +136,7 @@ typedef struct __attribute__((packed)) {
     uint8_t     IOC                         : 1;
     uint8_t     Rsvd                        : 4;
     uint8_t     TRBType                     : 6;
-    uint16_t     Rsvd                       : 16;
+    uint16_t    Rsvd                        : 16;
 } LinkTRB;
 
 #endif 

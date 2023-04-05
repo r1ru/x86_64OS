@@ -10,29 +10,27 @@ void initEventRing(void) {
     erst[0].RingSegmentBaseAddress = (uint64_t)er.er_segment >> 6;
     erst[0].RingSegmentSize = ERSEGSIZE;
     // set primary interrupter
-    InterrupterRegisterSet *IR0 = intr;
-    ERSTSZBitmap erstsz = (ERSTSZBitmap)IR0->ERSTSZ.data;
+    ERSTSZBitmap erstsz = intr->ERSTSZ;
     erstsz.bits.EventRingSegmentTableSize = 1;
-    IR0->ERSTSZ.data = erstsz.data;
-    ERSTBABitmap erstba = (ERSTBABitmap)IR0->ERSTBA.data;
+    intr->ERSTSZ = erstsz;
+    ERSTBABitmap erstba = intr->ERSTBA;
     erstba.bits.EventRingSegmentTableBaseAddressRegister = (uint64_t)erst >> 6;
-    IR0->ERSTBA.data = erstba.data;
-    ERDPBitmap erdp = (ERDPBitmap)IR0->ERDP.data;
+    intr->ERSTBA = erstba;
+    ERDPBitmap erdp = intr->ERDP;
     erdp.bits.EventRingDequeuePointer = (uint64_t)er.er_segment >> 4;
-    IR0->ERDP.data = erdp.data;
+    intr->ERDP = erdp;
 }
 
 // Ensure that there is an entry in EventRing before calling popEvent
 TRB * popEvent(bool *hasNext) {
     TRB *trb = &er.er_segment[er.readIdx];
-    InterrupterRegisterSet *IR0 = intr;
 
     // update ERDP
     if(er.readIdx != ERSEGSIZE - 1) {
         er.readIdx++;
-        IR0->ERDP.data += 0x10;
+        intr->ERDP.data += 0x10;
     } else {
-        IR0->ERDP.data = (uint64_t)er.er_segment;
+        intr->ERDP.data = (uint64_t)er.er_segment;
         er.readIdx = 0;
         er.CCS = !er.CCS;
     }

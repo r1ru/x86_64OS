@@ -10,19 +10,21 @@ UsbError initXhc(int NumDevice) {
     if(!op->USBSTS.bits.HCH)
         return ErrxHCNotHalted;
 
-    USBCMDBitmap usbcmd = (USBCMDBitmap)op->USBCMD.data;
+    USBCMDBitmap usbcmd = op->USBCMD;
     usbcmd.bits.HCRST = 1;
-    op->USBCMD.data = usbcmd.data;
+    op->USBCMD = usbcmd;
     while(op->USBCMD.bits.HCRST);
     while(op->USBSTS.bits.CNR);
     printk("xHC reset completed\n");
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
     printk("MaxSlots: %#x\n", cap->HCSPARAMS1.bits.MaxSlots);
-    CONFIGBitmap config = (CONFIGBitmap)op->CONFIG.data;
+    CONFIGBitmap config = op->CONFIG;
     config.bits.MaxSlotsEn = NumDevice;
-    op->CONFIG.data = config.data;
-    op->DCBAAP.data = (uint64_t)dcabaa;
+    op->CONFIG = config;
+    op->DCBAAP = (DCBAAPBitmap) {
+        .bits.DeviceContextBaseAddressArrayPointer = (uint64_t)dcabaa >> 6
+    };
 
     // Command Ringの設定
     initCommandRing();
@@ -33,16 +35,16 @@ UsbError initXhc(int NumDevice) {
     printk("event ring setup completed\n");
 
     // 割り込みの設定(Primary Interrupter)
-    IMODBitmap imod = (IMODBitmap)intr->IMOD.data;
-    IMANBitmap iman = (IMANBitmap)intr->IMAN.data;
+    IMODBitmap imod = intr->IMOD;
     imod.bits.IMODI = 4000;
+    intr->IMOD = imod;
+    IMANBitmap iman = intr->IMAN;
     iman.bits.IP = 1;
     iman.bits.IE = 1;
-    intr->IMOD.data = imod.data;
-    intr->IMAN.data = iman.data;
-    usbcmd = (USBCMDBitmap)op->USBCMD.data;
+    intr->IMAN = iman;
+    usbcmd = op->USBCMD;
     usbcmd.bits.INTE = 1;
-    op->USBCMD.data = usbcmd.data;
+    op->USBCMD = usbcmd;
     MessageAddressBitmap    msgAddr = {
         .bits = {
             .DM = 0,
@@ -62,9 +64,9 @@ UsbError initXhc(int NumDevice) {
     configureMSI(xhcDev, msgAddr, msgData);
 
     // start xHC 
-    usbcmd = (USBCMDBitmap)op->USBCMD.data;
+    usbcmd = op->USBCMD;
     usbcmd.bits.R_S = 1;
-    op->USBCMD.data = usbcmd.data;
+    op->USBCMD = usbcmd;
     while(op->USBSTS.bits.HCH);
     printk("xHC started\n");
 
