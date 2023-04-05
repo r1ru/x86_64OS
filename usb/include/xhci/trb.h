@@ -1,8 +1,9 @@
 #ifndef __TRB_H__
 #define __TRB_H__
 
-#include <macros.h>
 #include <stdint.h>
+
+#include <macros.h>
 
 // TRB Types defined on p.511
 typedef enum {

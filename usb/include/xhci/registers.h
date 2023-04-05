@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include <kstdio.h>
-#include <pci.h>
+#include <pci/pci.h>
 
 // Software shoud write following registers using unly "Dword Access"
 // If the register is 64-bit, software can also use "Qword Access" 

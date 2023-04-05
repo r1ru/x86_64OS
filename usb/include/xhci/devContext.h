@@ -2,6 +2,7 @@
 #define __DEV_CONTEXT_H__
 
 #include <stdint.h>
+
 #include <macros.h>
 
 typedef struct __attribute__((packed)){

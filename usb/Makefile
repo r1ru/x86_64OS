@@ -2,7 +2,8 @@ AR = ar
 CC = clang
 CFLAGS = -Wall -g -target x86_64-elf -ffreestanding -fno-pie -mno-red-zone -fno-stack-protector \
 		-I include -I../Kernel/Arch/x64/Include -I../Kernel/Include -I../Uefi/Include
-OBJS = pci.o asmfunc.o xhcDriver.o registers.o commandRing.o eventRing.o xhciInterruptHandler.o
+OBJS = 	pci/pci.o pci/asmfunc.o \
+		xhci/driver.o xhci/registers.o xhci/commandRing.o xhci/eventRing.o xhci/interruptHandler.o
 
 usbDriver.a: $(OBJS)
 	$(AR) rcs $@ $^
@@ -14,7 +15,7 @@ asmfunc.o : asmfunc.s
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o *.a
+	rm -f $(shell find ./ -name "*.o" -o -name "*.a")
 
 .PHONY : clean 
 	

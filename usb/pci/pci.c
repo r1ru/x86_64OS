@@ -1,4 +1,4 @@
-#include <pci.h>
+#include <pci/pci.h>
 
 #define shl(addr, n) (addr) << (n)
 

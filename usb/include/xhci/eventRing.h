@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdalign.h>
 
-#include <trb.h>
-#include <registers.h>
+#include <xhci/trb.h>
+#include <xhci/registers.h>
 
 #define ERSEGSIZE   0x10
 typedef struct {

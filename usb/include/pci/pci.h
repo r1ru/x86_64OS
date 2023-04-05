@@ -1,13 +1,12 @@
 #ifndef __PCI_H__
 #define __PCI_H__
 
-#include <asmfunc.h>
-#include <xhcDriver.h>
-#include <kstdio.h>
-#include <macros.h>
-
 #include <stdint.h>
 #include <stdbool.h>
+
+#include <pci/asmfunc.h>
+#include <kstdio.h>
+#include <macros.h>
 
 typedef struct {
     uint8_t bus;

@@ -1,8 +1,8 @@
 .intel_syntax noprefix
 .section .text
-.global ioOut32
 
 # void ioOut32(uint16_t addr, uint32_t data); 
+.global ioOut32
 ioOut32:
     xor edx, edx
     mov dx, di 
@@ -10,9 +10,8 @@ ioOut32:
     out dx, eax
     ret 
 
-.global ioIn32
-
 # uint32_t ioIn32(uint16_t addr);
+.global ioIn32
 ioIn32:
     xor edx, edx
     mov dx, di

@@ -1,4 +1,4 @@
-#include <xhciInterruptHandler.h>
+#include <xhci/interruptHandler.h>
 
 __attribute__((interrupt)) void xhciInterruptHandler(InterruptFrame *frame) {
     pushMsg((InterruptMessage){.ty = InterruptXHCI});
