@@ -21,6 +21,13 @@ void initEventRing(void) {
     intr->ERDP = erdp;
 }
 
+// 下位4bitはそのまま書き戻す
+static void writeDequeuePointer(uint64_t p) {
+    ERDPBitmap erdp = intr->ERDP;
+    erdp.bits.EventRingDequeuePointer = p >> 4;
+    intr->ERDP = erdp;
+}
+
 // Ensure that there is an entry in EventRing before calling popEvent
 TRB * popEvent(bool *hasNext) {
     TRB *trb = &er.er_segment[er.readIdx];
@@ -28,10 +35,10 @@ TRB * popEvent(bool *hasNext) {
     // update ERDP
     if(er.readIdx != ERSEGSIZE - 1) {
         er.readIdx++;
-        intr->ERDP.data += 0x10;
+        writeDequeuePointer((uint64_t)&er.er_segment[er.readIdx]);
     } else {
-        intr->ERDP.data = (uint64_t)er.er_segment;
         er.readIdx = 0;
+        writeDequeuePointer((uint64_t)&er.er_segment[er.readIdx]);
         er.CCS = !er.CCS;
     }
 
