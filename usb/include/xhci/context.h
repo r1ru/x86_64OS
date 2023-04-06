@@ -5,6 +5,7 @@
 
 #include <macros.h>
 
+// SlotContext defined on p.444
 typedef struct __attribute__((packed)){
     uint32_t    RouteString         : 20;
     uint8_t     Speed               : 4;
@@ -23,8 +24,13 @@ typedef struct __attribute__((packed)){
     uint8_t     UsbDeviceAddress    : 8;
     uint32_t    Rsvd                : 19;
     uint8_t     SlotState           : 5;
+    uint32_t    Rsvd                : 32;
+    uint32_t    Rsvd                : 32;
+    uint32_t    Rsvd                : 32;
+    uint32_t    Rsvd                : 32;
 } SlotContext;
 
+// EndPointContext defined on p.449
 typedef struct __attribute__((packed)) {
     uint8_t     EPState             : 3;
     uint8_t     Rsvd                : 5;
@@ -45,11 +51,15 @@ typedef struct __attribute__((packed)) {
     uint64_t    TRDequeuePointer    : 60;
     uint16_t    AverageTRBLength    : 16;
     uint16_t    MaxESITPayloadLo    : 16;
+    uint32_t    Rsvd                : 32;
+    uint32_t    Rsvd                : 32;
+    uint32_t    Rsvd                : 32;
 } EndPointContext;
 
+// DeviceContext defined on p.442
 typedef struct __attribute__((packed)) {
     SlotContext     SlotContext;
     EndPointContext EPContext[31];
 } DeviceContext;
 
-#endif 
+#endif
