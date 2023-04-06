@@ -28,6 +28,12 @@ static void writeDequeuePointer(uint64_t p) {
     intr->ERDP = erdp;
 }
 
+
+// EventRingにエントリがあるか調べる
+bool hasEvent(void) {
+    return er.er_segment[er.readIdx].C == er.CCS;
+}
+
 // Ensure that there is an entry in EventRing before calling popEvent
 TRB * popEvent(bool *hasNext) {
     TRB *trb = &er.er_segment[er.readIdx];

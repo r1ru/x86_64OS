@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdalign.h>
+#include <stdbool.h>
 
 #include <xhci/trb.h>
 #include <xhci/registers.h>
@@ -24,6 +25,7 @@ typedef struct __attribute__((packed)){
 } EventRingSegmentTableEntry;
 
 void initEventRing(void);
+bool hasEvent(void);
 TRB * popEvent(bool *hasNext);
 
 #endif 
