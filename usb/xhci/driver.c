@@ -82,6 +82,30 @@ static void OnCompletionEvent(CommandCompletionEventTRB *trb) {
     );
 }
 
+static void OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
+    uint8_t i = trb->PortID;
+    // PortIDは1始まり
+    PORTSCBitmap portsc = pr[i - 1].PORTSC;
+
+    printk(
+        "PortID: %#x ComplettionCode: %#x\n",
+        i,
+        trb->CompletionCode
+    );
+    // TODO: fix here
+    if (portsc.bits.CSC != 1 || portsc.bits.CCS != 1) {
+        printk("[error] something went wrong\n");
+        return;
+    }
+
+    // Clear CSC
+    portsc.bits.CSC = 1;
+    portsc.data &= FLAGMASK;
+    pr[i - 1].PORTSC = portsc;
+
+    printk("port%#x enabled\n", i);
+}
+
 void ProcessEvent(void) {
     TRB *trb;
     bool hasNext;
@@ -92,6 +116,9 @@ void ProcessEvent(void) {
         switch (trb->TRBType) {
             case CommandCompletionEvent:
                 OnCompletionEvent((CommandCompletionEventTRB *)trb);
+                break;
+            case PortStatsChangeEvent:
+                OnPortStatusChangedEvent((PortStatusChangedEventTRB *)trb);
                 break;
             default:
                 printk(

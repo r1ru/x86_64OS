@@ -150,6 +150,77 @@ typedef union {
     } bits;
 } CONFIGBitmap;
 
+// PORTSC defined on p.406
+typedef union __attribute__((packed)) {
+    uint32_t    data;
+    struct __attribute__((packed)) {
+        uint8_t     CCS         : 1;
+        uint8_t     PED         : 1;
+        uint8_t     Rsvd        : 1;
+        uint8_t     OCA         : 1;
+        uint8_t     PR          : 1;
+        uint8_t     PLS         : 4;
+        uint8_t     PP          : 1;
+        uint8_t     PortSpeed   : 4;
+        uint8_t     PIC         : 2;
+        uint8_t     LWS         : 1;
+        uint8_t     CSC         : 1;
+        uint8_t     PEC         : 1;
+        uint8_t     WRC         : 1;
+        uint8_t     OCC         : 1;
+        uint8_t     RPC         : 1;
+        uint8_t     PLC         : 1;
+        uint8_t     CEC         : 1;
+        uint8_t     CAS         : 1;
+        uint8_t     WCE         : 1;
+        uint8_t     WDE         : 1;
+        uint8_t     WOE         : 1;
+        uint8_t     Rsvd        : 2;
+        uint8_t     DR          : 1;
+        uint8_t     WPR         : 1;
+    } bits;
+} PORTSCBitmap;
+
+// following fields are RW1CS
+// software shoud use FLAGMASK before writing to PORTSC
+#define _PED        (1U << 1)
+#define _CSC        (1U << 17)
+#define _PEC        (1U << 18)
+#define _WRC        (1U << 19)
+#define _OCC        (1U << 20)
+#define _PRC        (1U << 21)
+#define _PLC        (1U << 22)
+#define _CEC        (1U << 23)
+#define FLAGMASK    ~(_PED|_CSC|_PEC|_WRC |_OCC|_PRC|_PLC|_CEC)
+
+// USB3 PORTPMSC defined on p.415
+typedef struct __attribute__((packed)) {
+    uint8_t     U1Timeout   : 8;
+    uint8_t     U2Timeout   : 8;
+    uint8_t     FLA         : 1;
+    uint16_t    Rsvd        : 15;
+} PORTPMSCBitmap;
+
+// USB3 PORTLI defined on p.418
+typedef struct __attribute__((packed)) {
+    uint16_t    LinkErrorCount  : 16;
+    uint8_t     RLC             : 4;
+    uint8_t     TLC             : 4;
+    uint8_t     Rsvd            : 8;
+} PORTLIBitmap;
+
+// USB3 PORTHLPMC defined on p.419
+typedef struct __attribute__((packed)) {
+    uint32_t    Rsvd;
+} PORTHLPMCBitmap;
+
+typedef struct __attribute__((packed)) {
+    PORTSCBitmap    PORTSC;
+    PORTPMSCBitmap  PORTPMSC;
+    PORTLIBitmap    PORTLI;
+    PORTHLPMCBitmap PORTHLPMC;
+} PortRegisterSet;
+
 typedef struct __attribute__((packed)) {
     USBCMDBitmap    USBCMD;
     USBSTSBitmap    USBSTS;
@@ -239,6 +310,7 @@ extern CapabilityRegistes       *cap;
 extern OperationalRegisters     *op;
 extern InterrupterRegisterSet   *intr;
 extern DoorBellRegister         *db;
+extern PortRegisterSet          *pr;
 
 void saveRegs(void);
 

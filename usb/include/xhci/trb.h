@@ -121,6 +121,18 @@ typedef struct __attribute__((packed)) {
     uint8_t     SlotId                      : 8;
 } CommandCompletionEventTRB;
 
+typedef struct __attribute__((packed)) {
+    uint32_t    Rsvd            : 24;
+    uint8_t     PortID          : 8;
+    uint32_t    Rsvd            : 32;
+    uint32_t    Rsvd            : 24;
+    uint8_t     CompletionCode  : 8;
+    uint8_t     C               : 1;
+    uint16_t    Rsvd            : 9;
+    uint8_t     TRBType         : 6;
+    uint16_t    Rsvd            : 16;
+} PortStatusChangedEventTRB;
+
 // Other TRBs defined on p.503
 
 // Link TRB defined on p.503
