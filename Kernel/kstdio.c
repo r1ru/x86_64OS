@@ -35,13 +35,13 @@ union arg {
 	void *p;
 };
 
-static void pop_arg(union arg *arg, int type, kva_list ap) {
+static void pop_arg(union arg *arg, int type, va_list ap) {
     switch (type) {
-	       case PTR:	arg->p = (void*)__kbuiltin_va_arg(ap);
-	break; case INT:	arg->i = __kbuiltin_va_arg(ap);
-	break; case UINT:	arg->i = __kbuiltin_va_arg(ap);
-	break; case CHAR:	arg->i = (signed char)__kbuiltin_va_arg(ap);
-	break; case UIPTR:	arg->i = (uintptr_t)__kbuiltin_va_arg(ap);
+	       case PTR:	arg->p = (void*)va_arg(ap, void*);
+	break; case INT:	arg->i = va_arg(ap, int);
+	break; case UINT:	arg->i = va_arg(ap, unsigned int);
+	break; case CHAR:	arg->i = (signed char)va_arg(ap, int);
+	break; case UIPTR:	arg->i = (uintptr_t)va_arg(ap, void *);
 	}
 }
 
@@ -83,7 +83,7 @@ static int getint(char **s) {
     return i;
 }
 
-static int printf_core(struct cookie *c, const char* fmt, kva_list ap){
+static int printf_core(struct cookie *c, const char* fmt, va_list ap){
     char *a, *z, *s = (char*)fmt;
     unsigned int fl;
     int w, p, xp;
@@ -214,7 +214,7 @@ static int printf_core(struct cookie *c, const char* fmt, kva_list ap){
 }
 
 // TODO: va_copyを実装する
-int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_list ap) {
+int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, va_list ap) {
     struct cookie c = {.s = s, .n = n - 1}; // TODO: ここ直す
     
     if(n > BUF_SIZE)
@@ -228,13 +228,15 @@ int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_l
 
 int printk(const char *fmt, ...) {
     char buf[BUF_SIZE];
-    kva_list ap;
+    va_list ap;
     int n;
     
-    __builtin_va_start(ap, 1);
+    va_start(ap, fmt);
     n = kvsnprintf(buf, BUF_SIZE, fmt, ap);
 
     putString(buf);
+    
+    va_end(ap);
     
     return n;
 }

@@ -2,18 +2,18 @@
 #define __K_STDLIB_H__
 
 #include <font.h>
-#include <kbuiltin.h>
 #include <kstring.h>
 #include <console.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 struct cookie {
 	char *s;
 	unsigned int n;
 };
 
-int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, kva_list ap);
+int kvsnprintf(char *restrict s, unsigned int n, const char *restrict fmt, va_list ap);
 int printk(const char *fmt, ...);
 
 #endif 
