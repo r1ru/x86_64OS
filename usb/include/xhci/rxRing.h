@@ -10,7 +10,7 @@
 #include <xhci/trb.h>
 #include <xhci/registers.h>
 
-typedef struct {
+typedef struct __attribute__((packed)) {
     TRB *segment;
     int cap;    // RingBufferのEntry数
     int CCS;    // Consumer Cycle State

@@ -1,8 +1,5 @@
 #include <xhci/driver.h>
 
-// とりあえず要素は固定(TODO: malloc作る？)
-alignas(64) DeviceContext* dcabaa[64];
-
 // TODO: fix this?
 static uint8_t addressingPortID;
 
@@ -23,13 +20,8 @@ UsbError initXhc(int NumDevice) {
     printk("xHC reset completed\n");
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
-    printk("MaxSlots: %#x\n", cap->HCSPARAMS1.bits.MaxSlots);
-    CONFIGBitmap config = op->CONFIG;
-    config.bits.MaxSlotsEn = NumDevice;
-    op->CONFIG = config;
-    op->DCBAAP = (DCBAAPBitmap) {
-        .bits.DeviceContextBaseAddressArrayPointer = (uint64_t)dcabaa >> 6
-    };
+    if((err = initDCBAA(NumDevice)))
+        return err;
 
     // Command Ringの設定
     if((err = initCommandRing(0x10)))
@@ -128,9 +120,7 @@ static UsbError enableSlot(uint8_t id) {
     if(!p)
         return ErrLowMemory;
     
-    dcabaa[id] = p;
-
-
+    dcbaa[id] = p;
 } */
 
 static void OnCompletionEvent(CommandCompletionEventTRB *trb) {

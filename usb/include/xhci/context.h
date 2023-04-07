@@ -3,8 +3,13 @@
 
 #include <stdint.h>
 
+#include <kstring.h>
 #include <macros.h>
+#include <usbError.h>
+#include <xhci/registers.h>
+#include <memory/allocator.h>
 
+// DeviceContextとInputContextは64byte alignかつページ境界をまたいではいけない
 // SlotContext defined on p.444
 typedef struct __attribute__((packed)){
     uint32_t    RouteString         : 20;
@@ -30,7 +35,7 @@ typedef struct __attribute__((packed)){
     uint32_t    Rsvd                : 32;
 } SlotContext;
 
-// EndPointContext defined on p.449
+// EndpointContext defined on p.449
 typedef struct __attribute__((packed)) {
     uint8_t     EPState             : 3;
     uint8_t     Rsvd                : 5;
@@ -54,12 +59,37 @@ typedef struct __attribute__((packed)) {
     uint32_t    Rsvd                : 32;
     uint32_t    Rsvd                : 32;
     uint32_t    Rsvd                : 32;
-} EndPointContext;
+} EndpointContext;
 
 // DeviceContext defined on p.442
 typedef struct __attribute__((packed)) {
     SlotContext     SlotContext;
-    EndPointContext EPContext[31];
+    EndpointContext EPContext[31];
 } DeviceContext;
+
+// InputControlContext defined on p.461
+typedef struct __attribute__((packed)) {
+    uint8_t     Rsvd                : 2;
+    uint32_t    DropContextFlags    : 30;
+    uint32_t    AddContextFlags     : 32;
+    uint32_t    Rsvd[5];
+    uint8_t     ConfigurationValue  : 8;
+    uint8_t     InterfaceNumber     : 8;
+    uint8_t     AlternateSetting    : 8;
+    uint8_t     Rsvd                : 8;
+} InputControlContext;
+
+// InputContext defined on p.459
+typedef struct __attribute__((packed)) {
+    InputControlContext InputControlContext;
+    SlotContext         SlotContext;
+    EndpointContext     EndpointContext[31];
+} InputContext;
+
+extern DeviceContext** dcbaa;
+
+UsbError initDCBAA(int cap);
+DeviceContext * newDeviceContext(void);
+InputContext * newInputContext(void);
 
 #endif

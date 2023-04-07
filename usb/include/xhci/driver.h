@@ -1,7 +1,6 @@
 #ifndef __XHC_DRIVER_H__
 #define __XHC_DRIVER_H__
 
-#include <stdalign.h>
 #include <stdbool.h>
 
 #include <usbError.h>
@@ -11,6 +10,7 @@
 #include <xhci/txRing.h>
 #include <xhci/rxRing.h>
 #include <xhci/trb.h>
+#include <xhci/context.h>
 #include <interrupt.h>
 #include <memory/allocator.h>
 
