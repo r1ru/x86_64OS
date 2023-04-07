@@ -2,10 +2,12 @@
 #define __USB_ERROR_H__
 
 typedef enum{
+    // 共通のエラー
+    ErrSuccess,
+    ErrLowMemory,
     // xhci/driver用のエラー
     ErrxHCSetupCompleted,
     ErrxHCNotHalted,
-    ErrLowMemory,
     // xhci/commandRing用のエラー
     ErrCommandRequested,
     ErrInvalidCommand,

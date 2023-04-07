@@ -10,7 +10,7 @@
 #include <pci/pci.h>
 #include <xhci/driver.h>
 #include <xhci/interruptHandler.h>
-#include <xhci/commandRing.h>
+#include <xhci/txRing.h>
 #include <xhci/eventRing.h>
 #include <xhci/trb.h>
 

@@ -3,7 +3,12 @@
 // とりあえず要素は固定(TODO: malloc作る？)
 alignas(64) DeviceContext* dcabaa[64];
 
+// TODO: fix this?
+static uint8_t addressingPortID;
+
 UsbError initXhc(int NumDevice) {
+    UsbError err;
+
     saveRegs();
 
     // xHCの初期化
@@ -27,7 +32,9 @@ UsbError initXhc(int NumDevice) {
     };
 
     // Command Ringの設定
-    initCommandRing();
+    if((err = initCommandRing(0x10)))
+        return err;
+    
     printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
@@ -73,22 +80,90 @@ UsbError initXhc(int NumDevice) {
     return ErrxHCSetupCompleted;
 }
 
-static void OnCompletionEvent(CommandCompletionEventTRB *trb) {
-    printk(
-        "CommandTRBPointer@%p CompletionCode: %#x C: %#x\n",
-        trb->CommandTRBPointerHiandLo << 4,
-        trb->CompletionCode,
-        trb->C // EventRing`s PCS flag
-    );
+/*
+// TODO: PSIVとの対応関係を標準的なものであることを仮定せず、xHCI Extended Capabilitiesを読む
+static uint16_t portSpeed2MaxPacketSize(uint8_t speed) {
+    switch(speed) {
+        case 3:
+            return 64;
+        case 4:
+            return 512;
+        default:
+            return 8;
+    }
 }
 
+// TODO: 関数に切り出す
+static UsbError addressDevice(uint8_t slotID) {
+    InputContext *p = (InputContext *)AllocMem(sizeof(InputContext));
+    // A0(SlotContext)とA1(EP0(Default Controll Pipe))を有効化
+    p->InputControlContext.AddContextFlags |= 0b11;
+    // SlotContextを設定
+    p->SlotContext = (SlotContext) {
+        .RootHubPortNumber  = addressingPortID,
+        .Speed              = pr[addressingPortID - 1].PORTSC.bits.PortSpeed,
+    };
+    // Default Controll Pipeの設定
+    p->EndpointContext[0] = (EndpointContext) {
+        .EPType         = 4,
+        .MaxPacketSize  = portSpeed2MaxPacketSize(p->SlotContext.Speed),
+        .MaxBurstSize   = 0,
+        .DCS            = 1,
+        .Interval       = 0,
+        .MaxPStreams    = 0,
+        .Mult           = 0,
+        .CErr           = 3, 
+    };
+    // AddressDeviceCommandを発行
+    // TODO: エラーをerror.hにまとめる
+    return pushCommand((TRB *)&(AddressDeviceCommandTRB) {
+        .InputContextPointerHiandLo = (uint64_t)p >> 4,
+        .SlotID                     = slotID,
+    });
+}
+
+static UsbError enableSlot(uint8_t id) {
+    DeviceContext *p = (DeviceContext *)AllocMem(sizeof(DeviceContext));
+
+    if(!p)
+        return ErrLowMemory;
+    
+    dcabaa[id] = p;
+
+
+} */
+
+static void OnCompletionEvent(CommandCompletionEventTRB *trb) {
+    TRB *req = (TRB *)(trb->CommandTRBPointerHiandLo << 4);
+
+    printk(
+        "res@%p: CompletionCode: %#x ",
+        req,
+        trb->CompletionCode
+    );
+
+    switch(req->TRBType) {
+        case EnableSlotCommand:
+            // TODO: CompletionCodeがsuccessで無かった場合を考慮
+            printk(
+                "SlotID: %#x",
+                trb->SlotId
+            );
+
+    }
+
+    printk("\n");
+
+}
+
+/*
 static void OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
     uint8_t i = trb->PortID;
     // PortIDは1始まり
     PORTSCBitmap portsc = pr[i - 1].PORTSC;
 
     printk(
-        "PortID: %#x ComplettionCode: %#x\n",
+        "PortID: %#x CompletionCode: %#x\n",
         i,
         trb->CompletionCode
     );
@@ -99,16 +174,23 @@ static void OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
     }
 
     // Clear CSC
-    portsc.bits.CSC = 1;
     portsc.data &= FLAGMASK;
+    portsc.bits.CSC = 1;
     pr[i - 1].PORTSC = portsc;
 
     printk("port%#x enabled\n", i);
-}
+    addressingPortID = i;
+
+    // Enable Slot
+    pushCommand(&(TRB){.TRBType = EnableSlotCommand});
+} */
 
 void ProcessEvent(void) {
     TRB *trb;
-    bool hasNext;
+    bool hasNext = false;
+
+    // EventRingにエントリがなければreturn   
+    if(!hasEvent()) return;
 
     do {
         trb = popEvent(&hasNext);
@@ -117,9 +199,10 @@ void ProcessEvent(void) {
             case CommandCompletionEvent:
                 OnCompletionEvent((CommandCompletionEventTRB *)trb);
                 break;
+            /*
             case PortStatsChangeEvent:
                 OnPortStatusChangedEvent((PortStatusChangedEventTRB *)trb);
-                break;
+                break; */
             default:
                 printk(
                     "TRBType: %#x C: %#x\n",

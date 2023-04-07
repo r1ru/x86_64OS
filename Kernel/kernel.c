@@ -36,17 +36,13 @@ void KernelMain(FrameBufferInfo *info) {
         case ErrxHCSetupCompleted:
             printk("xHC setup completed\n");
             break;
-        case ErrxHCNotHalted:
-            printk("[error] xHC not halted\n");
+        
+        default:
+            printk("initXhc failed : %#x\n", err);
             while(1) asm volatile("cli\n\thlt");
     }
 
-    // Send No OpCommand ref p.107 of xHCI Specification
-    if(pushCommand(NoOpCommand) != CommandRequested) {
-        printk("[error] command request failed\n");
-        while(1) asm volatile("hlt");
-    }
-    printk("No Op Command Requeseted\n");
+    pushCommand(&(TRB){.TRBType = NoOpCommand});
 
     while(1) {
         if(isEmpty()) {
@@ -59,6 +55,9 @@ void KernelMain(FrameBufferInfo *info) {
         switch(msg.ty) {
             case InterruptXHCI:
                 ProcessEvent();
+                break;
+            default:
+                continue;
         }
     }
 }

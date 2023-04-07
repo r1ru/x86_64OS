@@ -6,12 +6,13 @@
 
 #include <usbError.h>
 #include <pci/pci.h>
-#include <xhci/devContext.h>
+#include <xhci/context.h>
 #include <xhci/registers.h>
-#include <xhci/commandRing.h>
+#include <xhci/txRing.h>
 #include <xhci/eventRing.h>
 #include <xhci/trb.h>
 #include <interrupt.h>
+#include <memory/allocator.h>
 
 UsbError initXhc(int NumDevice);
 void ProcessEvent(void);
