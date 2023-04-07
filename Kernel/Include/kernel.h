@@ -11,7 +11,7 @@
 #include <xhci/driver.h>
 #include <xhci/interruptHandler.h>
 #include <xhci/txRing.h>
-#include <xhci/eventRing.h>
+#include <xhci/rxRing.h>
 #include <xhci/trb.h>
 
 typedef void EntryPointType(FrameBufferInfo *info);

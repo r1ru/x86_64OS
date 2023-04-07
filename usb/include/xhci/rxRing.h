@@ -1,19 +1,21 @@
-#ifndef __EVENT_RING_H__
-#define __EVENT_RING_H__
+#ifndef __RX_RING_H__
+#define __RX_RING_H__
 
 #include <stdint.h>
-#include <stdalign.h>
+#include <stddef.h>
 #include <stdbool.h>
 
+#include <usbError.h>
+#include <memory/allocator.h>
 #include <xhci/trb.h>
 #include <xhci/registers.h>
 
-#define ERSEGSIZE   0x10
 typedef struct {
-    TRB er_segment[ERSEGSIZE];
-    int CCS; // Consumer Cycle State
+    TRB *segment;
+    int cap;    // RingBufferのEntry数
+    int CCS;    // Consumer Cycle State
     int readIdx;
-} EventRing;
+} RXRing;
 
 // EventRingSegmentTableEntry defined on p.515
 typedef struct __attribute__((packed)){
@@ -24,7 +26,9 @@ typedef struct __attribute__((packed)){
     uint32_t    Rsvd                    : 32;
 } EventRingSegmentTableEntry;
 
-void initEventRing(void);
+EventRingSegmentTableEntry * newERST(int cap);
+RXRing * newRXRing(int cap);
+UsbError initEventRing(int cap);
 bool hasEvent(void);
 TRB * popEvent(bool *hasNext);
 

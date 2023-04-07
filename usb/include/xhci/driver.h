@@ -9,7 +9,7 @@
 #include <xhci/context.h>
 #include <xhci/registers.h>
 #include <xhci/txRing.h>
-#include <xhci/eventRing.h>
+#include <xhci/rxRing.h>
 #include <xhci/trb.h>
 #include <interrupt.h>
 #include <memory/allocator.h>

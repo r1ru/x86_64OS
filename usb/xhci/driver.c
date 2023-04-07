@@ -34,11 +34,11 @@ UsbError initXhc(int NumDevice) {
     // Command Ringの設定
     if((err = initCommandRing(0x10)))
         return err;
-    
     printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
-    initEventRing();
+    if((err = initEventRing(0x10)))
+        return err;
     printk("event ring setup completed\n");
 
     // 割り込みの設定(Primary Interrupter)
