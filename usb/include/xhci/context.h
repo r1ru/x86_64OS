@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include <kstring.h>
 #include <macros.h>
 #include <usbError.h>
 #include <xhci/registers.h>

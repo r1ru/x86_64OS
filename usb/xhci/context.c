@@ -15,8 +15,6 @@ UsbError initDCBAA(int maxSlotsEn) {
     if(!dcbaa)
         return ErrLowMemory;
     
-    kmemset(dcbaa, 0, sizeof(DeviceContext *) * (maxSlotsEn + 1));
-    
     op->DCBAAP = (DCBAAPBitmap) {
         .bits.DeviceContextBaseAddressArrayPointer = (uint64_t)dcbaa >> 6
     };

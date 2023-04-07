@@ -3,6 +3,7 @@
 
 #include <xhci/registers.h>
 #include <kstdio.h>
+#include <kstring.h>
 
 #include <stdint.h>
 #include <stdalign.h>
