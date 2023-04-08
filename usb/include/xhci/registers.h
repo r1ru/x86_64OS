@@ -168,7 +168,7 @@ typedef union __attribute__((packed)) {
         uint8_t     PEC         : 1;
         uint8_t     WRC         : 1;
         uint8_t     OCC         : 1;
-        uint8_t     RPC         : 1;
+        uint8_t     PRC         : 1;
         uint8_t     PLC         : 1;
         uint8_t     CEC         : 1;
         uint8_t     CAS         : 1;
