@@ -100,13 +100,38 @@ typedef struct __attribute__((packed)) {
 } TRB;
 
 // Command TRBs defined on p.487
-typedef struct __attribute__((packed)){
-    uint32_t    Rsvd[3];
+typedef struct __attribute__((packed)) {
+    uint32_t    Rsvd;
+    uint32_t    Rsvd;
+    uint32_t    Rsvd;
     uint8_t     C       : 1;
     uint16_t    Rsvd    : 9;
     uint8_t     TRBType : 6;
     uint16_t    Rsvd    : 16;
 } NoOpCommandTRB;
+
+typedef struct __attribute__((packed)) {
+    uint32_t    Rsvd        : 32;
+    uint32_t    Rsvd        : 32;
+    uint32_t    Rsvd        : 32;
+    uint8_t     C           : 1;
+    uint16_t    Rsvd        : 9;
+    uint8_t     TRBType     : 6;
+    uint8_t     SlotType    : 5;
+    uint16_t    Rsvd        : 11;     
+} EnableSlotCommandTRB;
+
+typedef struct __attribute__((packed)) {
+    uint8_t     Rsvd                        : 4;
+    uint64_t    InputContextPointerHiandLo  : 60;
+    uint32_t    Rsvd                        : 32;
+    uint8_t     C                           : 1;
+    uint16_t    Rsvd                        : 8;
+    uint8_t     BSR                         : 1;
+    uint8_t     TRBType                     : 6;
+    uint8_t     Rsvd                        : 8;
+    uint8_t     SlotID                      : 8;  
+} AddressDeviceCommandTRB;
 
 // Event TRBs defined on p.477
 typedef struct __attribute__((packed)) {

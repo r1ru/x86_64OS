@@ -10,7 +10,7 @@
 
 // DeviceContextとInputContextは64byte alignかつページ境界をまたいではいけない
 // SlotContext defined on p.444
-typedef struct __attribute__((packed)){
+typedef struct __attribute__((packed)) {
     uint32_t    RouteString         : 20;
     uint8_t     Speed               : 4;
     uint8_t     Rsvd                : 1;

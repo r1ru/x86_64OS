@@ -64,8 +64,9 @@ UsbError pushCommand(TRB *trb) {
         case AddressDeviceCommand:
             *(AddressDeviceCommandTRB *)&cr->buf[cr->writeIdx++] = (AddressDeviceCommandTRB) {
                 .TRBType                    = AddressDeviceCommand,
-                .InputContextPointerHiandLo = (uint64_t)((AddressDeviceCommandTRB*)trb)->InputContextPointerHiandLo >> 4,
+                .InputContextPointerHiandLo = ((AddressDeviceCommandTRB*)trb)->InputContextPointerHiandLo,
                 .SlotID                     = ((AddressDeviceCommandTRB*)trb)->SlotID,
+                .C                          = cr->PCS,
             };
             printk("AddressDeviceCommand\n");
             break;
