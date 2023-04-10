@@ -142,7 +142,7 @@ static UsbError addressDevice(uint8_t slotID) {
     dcbaa[slotID] = outputctx;
 
     // AddressDeviceCommandを発行 ref: p.110
-    return pushCommand((TRB *)&(AddressDeviceCommandTRB) {
+    return PushCommand((TRB *)&(AddressDeviceCommandTRB) {
         .TRBType                    = AddressDeviceCommand,
         .SlotID                     = slotID,
         .InputContextPointerHiandLo = (uint64_t)inputctx >> 4,
@@ -219,7 +219,10 @@ static void OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
             prs->PORTSC     = portsc;
             // EnableSlotCommandを発行してスロット割り当てを実行
             printk("enabling slot for port%#x\n", addressingPortID);
-            pushCommand(&(TRB){.TRBType = EnableSlotCommand});
+            PushCommand((TRB *)&(EnableSlotCommandTRB) {
+                .TRBType    = EnableSlotCommand,
+                .SlotType   = 0,
+            });
             return;
         }
 
@@ -242,7 +245,10 @@ static void OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
         prs->PORTSC     = portsc;
         // EnableSlotCommandを発行してスロット割り当てを実行
         printk("enabling slot for port%#x\n", addressingPortID);
-        pushCommand(&(TRB){.TRBType = EnableSlotCommand});
+        PushCommand((TRB *)&(EnableSlotCommandTRB){
+            .TRBType    = EnableSlotCommand,
+            .SlotType   = 0,
+        });
         return;
     }
 

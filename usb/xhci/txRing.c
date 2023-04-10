@@ -23,7 +23,7 @@ TXRing * newTXRing(int cap) {
         .TC                         = 1,
         .C                          = r->PCS
     };
-
+    
     return r;
 }
 
@@ -42,45 +42,51 @@ UsbError initCommandRing(int cap) {
     return  ErrSuccess; 
 }
 
-UsbError pushCommand(TRB *trb) {
-    printk("req@%p ", &cr->buf[cr->writeIdx]);
-    
+// CommandRing, TransferRing共用の処理
+static void pushTRB(TXRing *r, TRB *trb) {
+    TRB *dest = &r->buf[r->writeIdx];
+
+    printk(
+        "trb@%p %#x\n",
+        dest, 
+        trb->TRBType
+    );
+
+    *dest   = *trb;
+    dest->C = r->PCS;
+    r->writeIdx++;
+
+    if (r->writeIdx == r->cap - 1) {
+        r->buf[r->writeIdx].C = r->PCS;
+        r->PCS = !r->PCS;
+        r->writeIdx = 0;
+    }
+}
+
+// Doorbell Regiterに書き込みを行う
+// この関数は必ず成功する
+UsbError RingDoorBell(int slotID, int epNumber) {
+    if(slotID == 0) {
+        // slotIDが0の時はDB0に書き込み、epNumberは無視。
+        db->data = 0;
+    } else {
+        // それ以外の場合はslotIDに対応するDBにDCI値を書き込む。
+        db[slotID].data = epNumber * 2 + 1;
+    }
+     return ErrSuccess;
+}
+
+// CommnadRingにCommand TRBを書き込んでxhcに通知する
+UsbError PushCommand(TRB *trb) {
     switch(trb->TRBType) {
         case NoOpCommand:
-            *(NoOpCommandTRB *)&cr->buf[cr->writeIdx++] = (NoOpCommandTRB) {
-                .TRBType    = NoOpCommand,
-                .C          = cr->PCS
-            };
-            printk("NoOpCommand\n");
-            break;
         case EnableSlotCommand:
-            *(EnableSlotCommandTRB *)&cr->buf[cr->writeIdx++] = (EnableSlotCommandTRB) {
-                .TRBType    = EnableSlotCommand,
-                .SlotType   = 0,
-                .C          = cr->PCS
-            };
-            printk("EnableSlotCommand\n");
-            break;
         case AddressDeviceCommand:
-            *(AddressDeviceCommandTRB *)&cr->buf[cr->writeIdx++] = (AddressDeviceCommandTRB) {
-                .TRBType                    = AddressDeviceCommand,
-                .InputContextPointerHiandLo = ((AddressDeviceCommandTRB*)trb)->InputContextPointerHiandLo,
-                .SlotID                     = ((AddressDeviceCommandTRB*)trb)->SlotID,
-                .C                          = cr->PCS,
-            };
-            printk("AddressDeviceCommand\n");
-            break;
+            pushTRB(cr, trb);
+            return RingDoorBell(0, 0);
         default:
-            return ErrInvalidCommand;
+            return ErrInvalidCommand;   
     }
-
-    if (cr->writeIdx == cr->cap - 1) {
-        ((LinkTRB *)&cr->buf[cr->writeIdx])->C = cr->PCS;
-        cr->PCS = !cr->PCS;
-        cr->writeIdx = 0;
-    }
-
-    // Ring Doorbell
-    db->data = 0;
-    return ErrCommandRequested;
 }
+
+// TODO: Push2Transferを実装

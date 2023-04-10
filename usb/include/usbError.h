@@ -5,11 +5,10 @@ typedef enum{
     // 共通のエラー
     ErrSuccess,
     ErrLowMemory,
-    // xhci/driver用のエラー
+    // xhci/driver.c用のエラー
     ErrxHCSetupCompleted,
     ErrxHCNotHalted,
-    // xhci/commandRing用のエラー
-    ErrCommandRequested,
+    // xhci/txRing.c用のエラー
     ErrInvalidCommand,
 } UsbError;
 

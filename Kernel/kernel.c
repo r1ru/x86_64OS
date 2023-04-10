@@ -42,7 +42,7 @@ void KernelMain(FrameBufferInfo *info) {
             while(1) asm volatile("cli\n\thlt");
     }
 
-    pushCommand(&(TRB){.TRBType = NoOpCommand});
+    PushCommand(&(TRB){.TRBType = NoOpCommand});
 
     while(1) {
         if(isEmpty()) {
