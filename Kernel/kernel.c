@@ -5,7 +5,7 @@ void _start(FrameBufferInfo *info) {
         ".intel_syntax noprefix\n"
         "push rcx\n"
         "pop rdi\n"
-        "jmp KernelMain\n"
+        "call KernelMain\n"
         ".L0: hlt\n"
         "jmp .L0\n"
     );

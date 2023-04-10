@@ -102,17 +102,13 @@ static UsbError addressDevice(uint8_t slotID) {
 
      // SlotContextを設定 ref: p.96
     PORTSCBitmap portsc = pr[addressingPortID - 1].PORTSC;
-    inputctx->SlotContext.RouteString    = 0;
-    inputctx->SlotContext.Speed          = portsc.bits.PortSpeed;
-    inputctx->SlotContext.ContextEntries = 1;
-    inputctx->SlotContext.RootHubPortNumber = addressingPortID;
-    /*
+
     inputctx->SlotContext = (SlotContext) {
         .RouteString        = 0,
         .Speed              = portsc.bits.PortSpeed,
         .ContextEntries     = 1,
         .RootHubPortNumber  = addressingPortID,
-    };*/
+    };
 
     // Default Control Pipe用のTransfer Ringを生成
     TXRing *r = newTXRing(0x10);
