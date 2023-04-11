@@ -181,9 +181,8 @@ typedef union __attribute__((packed)) {
     } bits;
 } PORTSCBitmap;
 
-// following fields are RW1CS
-// software shoud use FLAGMASK before writing to PORTSC
 #define _PED        (1U << 1)
+#define _PR         (1U << 4)
 #define _CSC        (1U << 17)
 #define _PEC        (1U << 18)
 #define _WRC        (1U << 19)
@@ -191,6 +190,9 @@ typedef union __attribute__((packed)) {
 #define _PRC        (1U << 21)
 #define _PLC        (1U << 22)
 #define _CEC        (1U << 23)
+
+// following fields are RW1CS
+// software shoud use FLAGMASK before writing to PORTSC
 #define FLAGMASK    ~(_PED|_CSC|_PEC|_WRC |_OCC|_PRC|_PLC|_CEC)
 
 // USB3 PORTPMSC defined on p.415

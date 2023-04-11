@@ -54,7 +54,7 @@ void KernelMain(FrameBufferInfo *info) {
 
         switch(msg.ty) {
             case InterruptXHCI:
-                ProcessEvent();
+                ProcessEvents();
                 break;
             default:
                 continue;

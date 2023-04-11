@@ -11,10 +11,11 @@
 #include <xhci/rxRing.h>
 #include <xhci/trb.h>
 #include <xhci/context.h>
+#include <port/manager.h>
 #include <interrupt.h>
 #include <memory/allocator.h>
 
 UsbError initXhc(int NumDevice);
-void ProcessEvent(void);
+void ProcessEvents(void);
 
 #endif 

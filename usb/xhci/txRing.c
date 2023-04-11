@@ -47,7 +47,7 @@ static void pushTRB(TXRing *r, TRB *trb) {
     TRB *dest = &r->buf[r->writeIdx];
 
     printk(
-        "trb@%p %#x\n",
+        "req@%p Type: %#x\n",
         dest, 
         trb->TRBType
     );
