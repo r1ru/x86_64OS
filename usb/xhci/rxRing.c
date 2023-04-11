@@ -26,14 +26,14 @@ RXRing * newRXRing(int cap) {
 // TODO: 
 // segmentを1つ以上持てるようにする？
 // PrimaryInterrupter以外を指定できるようにする 
-UsbError initEventRing(int cap) {
+USBError initEventRing(int cap) {
     EventRingSegmentTableEntry *erst;
 
     if(!(erst = newERST(1)))
-        return ErrLowMemory;
+        return NewErrorf(ErrMemory, "could not allocate ERST");
     
     if(!(er = newRXRing(cap)))
-        return ErrLowMemory;
+        return NewErrorf(ErrMemory, "could not allocate RXRING");
     
     erst[0].RingSegmentBaseAddress = (uint64_t)er->segment >> 6;
     erst[0].RingSegmentSize = cap;
@@ -49,7 +49,7 @@ UsbError initEventRing(int cap) {
     erdp.bits.EventRingDequeuePointer = (uint64_t)er->segment >> 4;
     intr->ERDP = erdp;
 
-    return ErrSuccess;
+    return Nil;
 }
 
 // 下位4bitはそのまま書き戻す

@@ -4,7 +4,7 @@
 // PortIDは1からMaxPortsまでの値を取る
 static PortStateTable table;
 
-UsbError InitPortManager(void) {
+USBError InitPortManager(void) {
     // Portの状態を管理するテーブルを作成
     table = (PortStateTable) {
         .len    = cap->HCSPARAMS1.bits.MaxPorts,
@@ -16,9 +16,9 @@ UsbError InitPortManager(void) {
     };
 
     if(!table.state)
-        return ErrLowMemory;
+        return NewErrorf(ErrMemory, "could not allocate port table");
     
-    return ErrSuccess;
+    return Nil; 
 }
 
 PORTSCBitmap GetPORTSC(int portID) {
@@ -52,28 +52,26 @@ static void setState(int portID, PortState s) {
     table.state[portID - 1] = s;
 }
 
-UsbError TransitionState(int portID, PortState to) {
+USBError TransitionState(int portID, PortState to) {
     PortState from  = getState(portID);
     switch(to) {
         case PortStateEnabled:
             if(from != PortStateDisconnected && from != PortStateDisabled)
-                return ErrInvalidPortStateTransition;
+                return NewErrorf(ErrPort, "invalid port state transition");
             break;
         case PortStateDisabled:
             if(from != PortStateDisconnected)
-                return ErrInvalidPortStateTransition;
+                return NewErrorf(ErrPort, "invalid port state transition");
             break;
         default:
-            return ErrInvalidPortStateTransition;
+            return NewErrorf(ErrPort, "invalid port state transition");
     }
-    printk("port%#x from: %#x to: %#x\n", portID, from, to);
     setState(portID, to);
 
-    return ErrSuccess;
+    return Nil; 
 }
 
-UsbError ResetPort(int portID) {
+USBError ResetPort(int portID) {
     SetPORTSCFlags(portID, _PR);
-
-    return ErrSuccess;
+    return Nil;
 }

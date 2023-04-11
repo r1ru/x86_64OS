@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <kstdio.h>
 #include <usbError.h>
 #include <memory/allocator.h>
 #include <xhci/trb.h>
@@ -18,8 +17,8 @@ typedef struct __attribute__((packed)){
 } TXRing;
 
 TXRing * newTXRing(int cap);
-UsbError initCommandRing(int cap);
-UsbError RingDoorBell(int slotID, int epNumber);
-UsbError PushCommand(TRB *trb);
+USBError initCommandRing(int cap);
+USBError RingDoorBell(int slotID, int epNumber);
+USBError PushCommand(TRB *trb);
 
 #endif 

@@ -2,7 +2,6 @@
 #define __ALLOCATOR_H__
 
 #include <xhci/registers.h>
-#include <kstdio.h>
 #include <kstring.h>
 
 #include <stdint.h>

@@ -87,7 +87,7 @@ typedef struct __attribute__((packed)) {
 
 extern DeviceContext** dcbaa;
 
-UsbError initDCBAA(int cap);
+USBError initDCBAA(int cap);
 DeviceContext * newDeviceContext(void);
 InputContext * newInputContext(void);
 

@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include <kstdio.h>
 #include <usbError.h>
 #include <xhci/registers.h>
 #include <xhci/txRing.h>
@@ -23,11 +22,11 @@ typedef struct {
     PortState *state;
 } PortStateTable;
 
-UsbError InitPortManager(void);
+USBError InitPortManager(void);
 PORTSCBitmap GetPORTSC(int portID);
 void SetPORTSCFlags(int portID, uint32_t flags);
 void ClearPORTSCFlags(int portID, uint32_t flags);
-UsbError TransitionState(int potrID, PortState to);
-UsbError ResetPort(int portID);
+USBError TransitionState(int potrID, PortState to);
+USBError ResetPort(int portID);
 
 #endif 

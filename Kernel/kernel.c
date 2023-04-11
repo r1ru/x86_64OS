@@ -30,18 +30,12 @@ void KernelMain(FrameBufferInfo *info) {
     int NumDevice = scanAllBus();
     printk("NumDevice: %#x\n", NumDevice);
 
-    UsbError err = initXhc(NumDevice);
-
-    switch (err) {
-        case ErrxHCSetupCompleted:
-            printk("xHC setup completed\n");
-            break;
-        
-        default:
-            printk("initXhc failed : %#x\n", err);
-            while(1) asm volatile("cli\n\thlt");
+    USBError err = initXhc(NumDevice);
+    if(err.code){
+        PrintError(err);
+        while(1) asm volatile("cli\n\thlt");
     }
-
+    
     PushCommand(&(TRB){.TRBType = NoOpCommand});
 
     while(1) {

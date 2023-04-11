@@ -15,7 +15,7 @@
 #include <interrupt.h>
 #include <memory/allocator.h>
 
-UsbError initXhc(int NumDevice);
+USBError initXhc(int NumDevice);
 void ProcessEvents(void);
 
 #endif 

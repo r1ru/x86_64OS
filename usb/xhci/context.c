@@ -3,7 +3,7 @@
 // dcabaの配列
 DeviceContext** dcbaa;
 
-UsbError initDCBAA(int maxSlotsEn) {
+USBError initDCBAA(int maxSlotsEn) {
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
     printk("MaxSlots: %#x\n", cap->HCSPARAMS1.bits.MaxSlots);
     CONFIGBitmap config = op->CONFIG;
@@ -13,13 +13,13 @@ UsbError initDCBAA(int maxSlotsEn) {
     // SlotIDは1始まりなので+1する
     dcbaa = (DeviceContext **)AllocMem(sizeof(DeviceContext *) * (maxSlotsEn + 1), 64, 0);
     if(!dcbaa)
-        return ErrLowMemory;
+        return NewErrorf(ErrMemory, "could not allocate DCBAA");
     
     op->DCBAAP = (DCBAAPBitmap) {
         .bits.DeviceContextBaseAddressArrayPointer = (uint64_t)dcbaa >> 6
     };
 
-    return ErrSuccess;
+    return Nil;
 }
 
 // TODO: PAGESIZEを4096固定でなくする

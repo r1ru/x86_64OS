@@ -27,30 +27,22 @@ TXRing * newTXRing(int cap) {
     return r;
 }
 
-UsbError initCommandRing(int cap) {
+USBError initCommandRing(int cap) {
     if(!(cr = newTXRing(cap)))
-        return ErrLowMemory;
+        return NewErrorf(ErrMemory, "could not allocate command ring");
     
-    printk("cr@%p cr->buf@%p\n", cr, cr->buf);
-
     // CommandRingの登録
     CRCRBitmap crcr = op->CRCR;
     crcr.bits.CommandRingPointer = (uint64_t)cr->buf >> 6;
     crcr.bits.RCS = cr->PCS;
     op->CRCR = crcr;
 
-    return  ErrSuccess; 
+    return Nil; 
 }
 
 // CommandRing, TransferRing共用の処理
-static void pushTRB(TXRing *r, TRB *trb) {
+static USBError pushTRB(TXRing *r, TRB *trb) {
     TRB *dest = &r->buf[r->writeIdx];
-
-    printk(
-        "req@%p Type: %#x\n",
-        dest, 
-        trb->TRBType
-    );
 
     *dest   = *trb;
     dest->C = r->PCS;
@@ -61,11 +53,12 @@ static void pushTRB(TXRing *r, TRB *trb) {
         r->PCS = !r->PCS;
         r->writeIdx = 0;
     }
+
+    return Nil;
 }
 
 // Doorbell Regiterに書き込みを行う
-// この関数は必ず成功する
-UsbError RingDoorBell(int slotID, int epNumber) {
+USBError RingDoorBell(int slotID, int epNumber) {
     if(slotID == 0) {
         // slotIDが0の時はDB0に書き込み、epNumberは無視。
         db->data = 0;
@@ -73,19 +66,20 @@ UsbError RingDoorBell(int slotID, int epNumber) {
         // それ以外の場合はslotIDに対応するDBにDCI値を書き込む。
         db[slotID].data = epNumber * 2 + 1;
     }
-     return ErrSuccess;
+    return Nil;
 }
 
 // CommnadRingにCommand TRBを書き込んでxhcに通知する
-UsbError PushCommand(TRB *trb) {
+USBError PushCommand(TRB *trb) {
     switch(trb->TRBType) {
         case NoOpCommand:
         case EnableSlotCommand:
         case AddressDeviceCommand:
             pushTRB(cr, trb);
-            return RingDoorBell(0, 0);
+            RingDoorBell(0, 0);
+            return Nil;
         default:
-            return ErrInvalidCommand;   
+            return NewErrorf(ErrCommand, "invalid command");   
     }
 }
 

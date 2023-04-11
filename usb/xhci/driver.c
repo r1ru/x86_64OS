@@ -3,40 +3,41 @@
 // 現在処理中のPort番号
 static uint8_t addressingPortID;
 
-UsbError initXhc(int NumDevice) {
-    UsbError err;
+USBError initXhc(int NumDevice) {
+    USBError err;
 
     saveRegs();
 
     // xHCの初期化
     if(!op->USBSTS.bits.HCH)
-        return ErrxHCNotHalted;
+        return NewErrorf(ErrxHC, "xHC not halted");
 
     USBCMDBitmap usbcmd = op->USBCMD;
     usbcmd.bits.HCRST = 1;
     op->USBCMD = usbcmd;
     while(op->USBCMD.bits.HCRST);
     while(op->USBSTS.bits.CNR);
-    printk("xHC reset completed\n");
 
     // port managerの初期化
-    if((err = InitPortManager()))
+    err = InitPortManager();
+    if(err.code)
         return err;
 
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
-    if((err = initDCBAA(NumDevice)))
+    err = initDCBAA(NumDevice);
+    if(err.code)
         return err;
 
     // Command Ringの設定
-    if((err = initCommandRing(0x10)))
+    err = initCommandRing(0x10);
+    if(err.code)
         return err;
-    printk("command ring setup completed\n");
 
     // Event Ringの設定(Primary Interrupter)
-    if((err = initEventRing(0x10)))
+    err = initEventRing(0x10);
+    if(err.code)
         return err;
-    printk("event ring setup completed\n");
-
+    
     // 割り込みの設定(Primary Interrupter)
     IMODBitmap imod = intr->IMOD;
     imod.bits.IMODI = 4000;
@@ -71,9 +72,8 @@ UsbError initXhc(int NumDevice) {
     usbcmd.bits.R_S = 1;
     op->USBCMD = usbcmd;
     while(op->USBSTS.bits.HCH);
-    printk("xHC started\n");
 
-    return ErrxHCSetupCompleted;
+    return Nil;
 }
 
 // TODO: PSIVとの対応関係を標準的なものであることを仮定せず、xHCI Extended Capabilitiesを読む
@@ -90,14 +90,13 @@ static uint16_t portSpeed2MaxPacketSize(uint8_t speed) {
 
 // TODO: 関数に切り出す
 // メモリ確保に失敗したときはaddressingPortID = 0;にするべきだが現状Freeがないので回復することはない。
-static UsbError addressDevice(uint8_t slotID) {
+static USBError addressDevice(uint8_t slotID) {
     
     // InputContextの生成と初期化
     InputContext *inputctx = newInputContext();
     if(!inputctx)
-        return ErrLowMemory;
-    printk("inputctx@%p\n", inputctx);
-
+        return NewErrorf(ErrMemory, "could not allocate inputctx");
+    
     // A0(SlotContext)とA1(EP0(Default Controll Pipe))を有効化
     inputctx->InputControlContext.AddContextFlags |= 0b11;
 
@@ -114,8 +113,7 @@ static UsbError addressDevice(uint8_t slotID) {
     // Default Control Pipe用のTransfer Ringを生成
     TXRing *r = newTXRing(0x10);
     if(!r)
-        return ErrLowMemory;
-    printk("transfer ring@%p buf@%p\n", r, r->buf);
+        return NewErrorf(ErrMemory, "could not allocate transfer ring");
 
     // Default Controll Pipeの設定 ref: p.89
     inputctx->EndpointContext[0] = (EndpointContext) {
@@ -133,8 +131,7 @@ static UsbError addressDevice(uint8_t slotID) {
     // Output Contextを生成してdcbaaに登録
     DeviceContext *outputctx = newDeviceContext();
     if(!outputctx)
-        return ErrLowMemory;
-    printk("outputctx@%p\n", outputctx);
+        return NewErrorf(ErrMemory, "could not allocate outputctx");
     
     dcbaa[slotID] = outputctx;
 
@@ -146,7 +143,7 @@ static UsbError addressDevice(uint8_t slotID) {
     });
 }
 
-static UsbError OnCompletionEvent(CommandCompletionEventTRB *trb) {
+static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
     TRB *req = (TRB *)(trb->CommandTRBPointerHiandLo << 4);
 
     printk(
@@ -161,7 +158,7 @@ static UsbError OnCompletionEvent(CommandCompletionEventTRB *trb) {
             // TODO: error時にCompletionCodeも通知できるようにする
             if(trb->CompletionCode != Success) {
                 addressingPortID = 0;
-                return ErrEnableSlotFailed;
+                return NewErrorf(ErrCommand, "enable slot failed");
             }
             // addressDeviceを呼ぶ
             return addressDevice(trb->SlotId);
@@ -169,19 +166,19 @@ static UsbError OnCompletionEvent(CommandCompletionEventTRB *trb) {
         case AddressDeviceCommand:
             if(trb->CompletionCode != Success) {
                 addressingPortID = 0;
-                return ErrAddressDeviceFailed;
+                return NewErrorf(ErrCommand, "address device failed");
             }
             // TODO: ここに処理を追加
-            return ErrSuccess;
+            return Nil;
         
         default:
-            return ErrSuccess;
+            return Nil;
     }
 }
 
-static UsbError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
+static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
     uint8_t portID = trb->PortID;
-    UsbError err;
+    USBError err;
 
     printk(
         "PortID: %#x CompletionCode: %#x\n",
@@ -200,21 +197,21 @@ static UsbError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
         // USB2 protocol portで接続が検知されDisable stateになった場合
         if(!portsc.bits.PED && !portsc.bits.PR && portsc.bits.PLS == 0x7) {
-            
-            if((err = TransitionState(portID, PortStateDisabled)))
+            err = TransitionState(portID, PortStateDisabled);
+            if(err.code)
                 return err;
             
             if(portID == addressingPortID) {
                 // リセット処理を実行
-                printk("resetting port%#x\n", addressingPortID);
                 return ResetPort(portID);
             }
-            return ErrProcessingDelayed;
+            return Nil;
         }
 
         // USB3 protocol portで接続が検知されEnabled stateになった場合
         if(portsc.bits.PED && !portsc.bits.PR && !portsc.bits.PLS) {
-            if((err = TransitionState(portID, PortStateEnabled)))
+            err = TransitionState(portID, PortStateEnabled);
+            if(err.code)
                 return err;
             
             // clear PEC
@@ -222,20 +219,19 @@ static UsbError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
             if(portID == addressingPortID) {
                 // EnableSlotCommandを発行してスロット割り当てを実行
-                printk("enabling slot for port%#x\n", addressingPortID);
                 return PushCommand((TRB *)&(EnableSlotCommandTRB) {
                     .TRBType    = EnableSlotCommand,
                     .SlotType   = 0,
                 });
             }
-            return ErrProcessingDelayed;
+            return Nil;
         }
     }
 
     // USB2で発行したリセット処理が完了してEnable stateになった場合
     if(portsc.bits.PRC && portsc.bits.PED && !portsc.bits.PR && !portsc.bits.PLS) {
-        
-        if((err = TransitionState(portID, PortStateEnabled)))
+        err = TransitionState(portID, PortStateEnabled);
+        if(err.code)
             return err;
         
         // clear PRC and PEC
@@ -243,27 +239,32 @@ static UsbError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
         if(portID == addressingPortID) {
             // EnableSlotCommandを発行してスロット割り当てを実行
-            printk("enabling slot for port%#x\n", addressingPortID);
             return PushCommand((TRB *)&(EnableSlotCommandTRB){
                 .TRBType    = EnableSlotCommand,
                 .SlotType   = 0,
             });
         }
-         return ErrProcessingDelayed;
+        return Nil;
     }
 
     // 今のところそれ以外の場合(例えばdeviceのdetach)は考慮されていない
-    return ErrUnexpectedEventFactors;
+    return NewErrorf(
+        ErrEvent,
+        "unexpected event factors"
+    );
 }
 
-static UsbError processEvent(TRB *trb) {
+static USBError processEvent(TRB *trb) {
     switch(trb->TRBType) {
         case CommandCompletionEvent:
             return OnCompletionEvent((CommandCompletionEventTRB *)trb);
         case PortStatsChangeEvent:
             return OnPortStatusChangedEvent((PortStatusChangedEventTRB *)trb);
         default:
-            return ErrUnsupportedEvent;
+            return NewErrorf(
+                ErrEvent,
+                "unsupported event"
+            );
     }
 }
 
@@ -274,6 +275,6 @@ void ProcessEvents(void) {
     if(!hasEvent()) return;
 
     do {
-        printk("processEvent: %#x\n", processEvent(popEvent(&hasNext)));
+        PrintError(processEvent(popEvent(&hasNext)));
     } while (hasNext);
 }

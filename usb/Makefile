@@ -5,7 +5,8 @@ CFLAGS = -Wall -g -target x86_64-elf -ffreestanding -fno-pie -mno-red-zone -fno-
 OBJS = 	pci/pci.o pci/asmfunc.o \
 		port/manager.o \
 		xhci/driver.o xhci/registers.o xhci/txRing.o xhci/rxRing.o xhci/interruptHandler.o xhci/context.o \
-		memory/allocator.o
+		memory/allocator.o \
+		usbError.o 
 
 usbDriver.a: $(OBJS)
 	$(AR) rcs $@ $^

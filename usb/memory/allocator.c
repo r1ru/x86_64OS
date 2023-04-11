@@ -26,7 +26,6 @@ uintptr_t AllocMem(uint64_t size, uint64_t align, uint64_t boundary) {
     
     // 0クリアしてから返す
     kmemset((void *)p, 0, size);
-    printk("alloc mem@%p size: %#x\n", p, size);
     
     return p;
 }

@@ -28,7 +28,7 @@ typedef struct __attribute__((packed)){
 
 EventRingSegmentTableEntry * newERST(int cap);
 RXRing * newRXRing(int cap);
-UsbError initEventRing(int cap);
+USBError initEventRing(int cap);
 bool hasEvent(void);
 TRB * popEvent(bool *hasNext);
 
