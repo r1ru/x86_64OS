@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #include <pci/asmfunc.h>
-#include <kstdio.h>
+#include <logger.h>
 #include <macros.h>
 
 typedef struct {

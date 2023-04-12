@@ -22,13 +22,11 @@ void KernelMain(FrameBufferInfo *info) {
     }
 
     // 割り込みハンドラの登録
-    printk("xhciInterruptHandler@%p\n", &xhciInterruptHandler);
     setIDTEntry(xHCIVector, (uint64_t)&xhciInterruptHandler);
     loadIDT();
     asm volatile("sti");
 
     int NumDevice = scanAllBus();
-    printk("NumDevice: %#x\n", NumDevice);
 
     USBError err = initXhc(NumDevice);
     if(err.code){

@@ -33,8 +33,9 @@ void PrintError(USBError err) {
     if(err.code == ErrNil)
         return;
 
-    printk(
-        "%s:%d: error: %#x %s\n",
+    Log(
+        Error,
+        "[x] %s:%d: error: %#x %s\n",
         err.file,
         err.line,
         err.code,

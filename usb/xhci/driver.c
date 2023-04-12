@@ -146,8 +146,9 @@ static USBError addressDevice(uint8_t slotID) {
 static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
     TRB *req = (TRB *)(trb->CommandTRBPointerHiandLo << 4);
 
-    printk(
-        "res@%p: Type: %#x CompletionCode: %#x\n",
+    Log(
+        Info,
+        "[+] received trb@%p: type: %#x completion code: %#x\n",
         req,
         req->TRBType,
         trb->CompletionCode
@@ -180,13 +181,19 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
     uint8_t portID = trb->PortID;
     USBError err;
 
-    printk(
-        "PortID: %#x CompletionCode: %#x\n",
+    Log(
+        Info,
+        "[+] port status changed: portID: %#x completion code: %#x\n",
         portID,
         trb->CompletionCode
     );
 
     addressingPortID = addressingPortID ? addressingPortID : portID;
+    Log(
+        Info,
+        "[*] addressing portID: %#x\n",
+        addressingPortID
+    );
 
     PORTSCBitmap portsc = GetPORTSC(portID);
 
@@ -205,6 +212,11 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
                 // リセット処理を実行
                 return ResetPort(portID);
             }
+            Log(
+                Warning,
+                "[*] delayed precessing port%#x\n",
+                portID
+            );
             return Nil;
         }
 
@@ -224,6 +236,11 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
                     .SlotType   = 0,
                 });
             }
+            Log(
+                Warning,
+                "[*] delayed precessing port%#x\n",
+                portID
+            );
             return Nil;
         }
     }
@@ -244,6 +261,11 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
                 .SlotType   = 0,
             });
         }
+        Log(
+            Warning,
+            "[*] delayed precessing port%#x\n",
+            portID
+        );
         return Nil;
     }
 

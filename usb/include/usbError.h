@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#include <kstdio.h>
+#include <logger.h>
 #include <kstring.h>
 
 // USBErrorCodeはエラーが何に関連するものなのかを表す。(大まかな分類)

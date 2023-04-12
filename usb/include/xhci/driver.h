@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include <usbError.h>
+#include <logger.h>
 #include <pci/pci.h>
 #include <xhci/context.h>
 #include <xhci/registers.h>

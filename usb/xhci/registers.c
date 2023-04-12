@@ -14,7 +14,8 @@ void saveRegs(void) {
     db      = (DoorBellRegister *)(mmioBase + (cap->DBOFF.bits.DoorBellArrayOffset << 2));
     pr      = (PortRegisterSet *)((uint64_t)op + 0x400);
 
-    printk(
+    Log(
+        Debug,
         "cap: %#x op: %#x intr: %#x db: %#x pr: %#x\n",
         cap,
         op,

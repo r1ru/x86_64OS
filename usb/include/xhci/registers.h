@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <kstdio.h>
+#include <logger.h>
 #include <pci/pci.h>
 
 // Software shoud write following registers using unly "Dword Access"

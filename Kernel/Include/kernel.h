@@ -2,7 +2,6 @@
 #define __KERNEL_H__
 
 #include <graphics.h>
-#include <kstdio.h>
 #include <console.h>
 #include <segment.h>
 #include <interruptMessageQueue.h>

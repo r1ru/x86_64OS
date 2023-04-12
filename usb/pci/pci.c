@@ -85,29 +85,27 @@ static void scanFunc(uint8_t bus, uint8_t dev, uint8_t func) {
     // PCI-to-PCI bridgeの場合
     if(base == 0x06u && sub == 0x04u) {
         uint32_t secondaryBus = (readBusNumber(bus, dev, func) >> 8) & 0xffu;
-        printk("Found PCI-to-PCI bridge: secondaryBus: %#x\n", secondaryBus);
+        Log(
+            Debug,
+            "[*] found PCI-to-PCI bridge: secondaryBus: %#x\n", 
+            secondaryBus
+        );
         scanBus(secondaryBus);
     } else {
-        /*
-        printk(
-            "%d.%d.%d -> [classId] base: %#x, sub: %#x, interface: %#x\n",
+        Log(
+            Debug,
+            "[*] %d.%d.%d base: %#x, sub: %#x, interface: %#x vendorID: %#x\n",
             bus, dev, func,
             base,
             sub,
-            interface
-        );*/
+            interface,
+            vendorId
+        );
         // xHCだった場合
         if(base == 0x0c && sub == 0x03 && interface == 0x30) {
             xhcDev.bus = bus;
             xhcDev.dev = dev;
             xhcDev.func = func;
-            printk(
-                "Found xHCI @(%d.%d.%d) vendorId: %#x\n",
-                bus,
-                dev, 
-                func, 
-                vendorId
-            );
         }
         NumDevice++;
     }
@@ -140,7 +138,6 @@ static void scanBus(uint8_t bus) {
 
 int scanAllBus(void) {
     uint8_t headerType = readHeaderType(0, 0, 0); // Host bridgeのheaderを読む
-    printk("Host bridge header type: %#x\n", headerType);
     if(isSingleFunctionDevice(headerType)){
         scanBus(0);
     }else{
@@ -167,8 +164,9 @@ void configureMSI(Device dev, MessageAddressBitmap msgAddr, MessageDataBitmap ms
         hdr = (HeaderBitmap)readData(addr);
     }
 
-    printk(
-        "MSI Capability: CapId: %#x NxtPtr: %#x Addr64: %#x PreVectorMasking: %#x\n",
+    Log(
+        Debug,
+        "[*] MSI Capability: CapId: %#x NxtPtr: %#x Addr64: %#x PreVectorMasking: %#x\n",
         hdr.bits.CapId,
         hdr.bits.NxtPtr,
         hdr.bits.Addr64Capable,

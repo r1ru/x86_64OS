@@ -3,7 +3,7 @@ CFLAGS = -O2 -Wall -g -target x86_64-elf -ffreestanding -fno-pie -mno-red-zone -
 INCLUDES = -IInclude -I../Uefi/Include -I../usb/include
 LDFLAGS = --entry _start -z norelro --image-base 0x100000 --static -no-pie		
 OBJS = 	kernel.o graphics.o font.o kstring.o kstdio.o console.o segment.o \
-		interrupt.o interruptMessageQueue.o asmfunc.o
+		interrupt.o interruptMessageQueue.o asmfunc.o logger.o 
 DEPENDS = ../usb/usbDriver.a
 
 kernel.elf : $(OBJS) $(DEPENDS)

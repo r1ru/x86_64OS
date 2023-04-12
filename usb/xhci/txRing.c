@@ -48,6 +48,13 @@ static USBError pushTRB(TXRing *r, TRB *trb) {
     dest->C = r->PCS;
     r->writeIdx++;
 
+    Log(
+        Info,
+        "[+] pushed trb@%p: type: %#x\n",
+        dest,
+        trb->TRBType
+    );
+
     if (r->writeIdx == r->cap - 1) {
         r->buf[r->writeIdx].C = r->PCS;
         r->PCS = !r->PCS;
@@ -66,6 +73,12 @@ USBError RingDoorBell(int slotID, int epNumber) {
         // それ以外の場合はslotIDに対応するDBにDCI値を書き込む。
         db[slotID].data = epNumber * 2 + 1;
     }
+    Log(
+        Info,
+        "[+] rang doorbell for slot%#x\n",
+        slotID
+    );
+
     return Nil;
 }
 

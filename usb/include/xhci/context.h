@@ -5,6 +5,7 @@
 
 #include <macros.h>
 #include <usbError.h>
+#include <logger.h>
 #include <xhci/registers.h>
 #include <memory/allocator.h>
 

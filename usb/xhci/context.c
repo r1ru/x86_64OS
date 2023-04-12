@@ -5,7 +5,12 @@ DeviceContext** dcbaa;
 
 USBError initDCBAA(int maxSlotsEn) {
     // xHCが扱えるデバイスコンテキストの数の最大値を設定する
-    printk("MaxSlots: %#x\n", cap->HCSPARAMS1.bits.MaxSlots);
+    Log(
+        Info,
+        "[+] changing MaxSlots: %#x -> %#x\n",
+        cap->HCSPARAMS1.bits.MaxSlots,
+        maxSlotsEn
+    );
     CONFIGBitmap config = op->CONFIG;
     config.bits.MaxSlotsEn = maxSlotsEn;
     op->CONFIG = config;

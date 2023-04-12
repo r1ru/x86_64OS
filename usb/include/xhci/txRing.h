@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include <usbError.h>
+#include <logger.h>
 #include <memory/allocator.h>
 #include <xhci/trb.h>
 #include <xhci/registers.h>

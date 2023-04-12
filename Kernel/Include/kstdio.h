@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#define BUF_SIZE 100
+
 struct cookie {
 	char *s;
 	unsigned int n;
