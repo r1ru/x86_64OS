@@ -12,6 +12,7 @@ typedef enum {
     ErrNil,
     ErrxHC,
     ErrPort,
+    ErrSlot,
     ErrMemory,
     ErrCommand,
     ErrEvent,

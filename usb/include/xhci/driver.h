@@ -13,6 +13,7 @@
 #include <xhci/trb.h>
 #include <xhci/context.h>
 #include <port/manager.h>
+#include <slot/manager.h>
 #include <interrupt.h>
 #include <memory/allocator.h>
 

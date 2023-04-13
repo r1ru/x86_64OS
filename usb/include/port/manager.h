@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 #include <usbError.h>
+#include <logger.h>
+#include <memory/allocator.h>
 #include <xhci/registers.h>
-#include <xhci/txRing.h>
 
 // USB2 Root Hub Port State defined on p.300
 // USB3 Root Hub Port State defined on p.305
@@ -26,7 +27,7 @@ USBError InitPortManager(void);
 PORTSCBitmap GetPORTSC(int portID);
 void SetPORTSCFlags(int portID, uint32_t flags);
 void ClearPORTSCFlags(int portID, uint32_t flags);
-USBError TransitionState(int potrID, PortState to);
+USBError TransitionPortState(int potrID, PortState to);
 USBError ResetPort(int portID);
 
 #endif 

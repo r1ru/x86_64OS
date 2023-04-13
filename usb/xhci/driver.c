@@ -28,6 +28,11 @@ USBError initXhc(int NumDevice) {
     if(err.code)
         return err;
 
+    // slot managerの初期化
+    err = InitSlotManager();
+    if(err.code)
+        return err;
+    
     // Command Ringの設定
     err = initCommandRing(0x10);
     if(err.code)
@@ -137,14 +142,16 @@ static USBError addressDevice(uint8_t slotID) {
 
     // AddressDeviceCommandを発行 ref: p.110
     return PushCommand((TRB *)&(AddressDeviceCommandTRB) {
+        .InputContextPointerHiandLo = (uint64_t)inputctx >> 4,
+        .BSR                        = 0,
         .TRBType                    = AddressDeviceCommand,
         .SlotID                     = slotID,
-        .InputContextPointerHiandLo = (uint64_t)inputctx >> 4,
     });
 }
 
 static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
     TRB *req = (TRB *)(trb->CommandTRBPointerHiandLo << 4);
+    USBError err;
 
     Log(
         Info,
@@ -161,6 +168,10 @@ static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
                 addressingPortID = 0;
                 return NewErrorf(ErrCommand, "enable slot failed");
             }
+            // Slotの状態をEnabledに遷移
+            err = TransitionSlotState(trb->SlotId, SlotStateEnabled);
+            if(err.code)
+                return err;
             // addressDeviceを呼ぶ
             return addressDevice(trb->SlotId);
         
@@ -169,6 +180,10 @@ static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
                 addressingPortID = 0;
                 return NewErrorf(ErrCommand, "address device failed");
             }
+            // Slotの状態をAddressedに遷移
+            err = TransitionSlotState(trb->SlotId, SlotStateAddressed);
+            if(err.code)
+                return err;
             // TODO: ここに処理を追加
             return Nil;
         
@@ -204,7 +219,7 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
         // USB2 protocol portで接続が検知されDisable stateになった場合
         if(!portsc.bits.PED && !portsc.bits.PR && portsc.bits.PLS == 0x7) {
-            err = TransitionState(portID, PortStateDisabled);
+            err = TransitionPortState(portID, PortStateDisabled);
             if(err.code)
                 return err;
             
@@ -222,7 +237,7 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
         // USB3 protocol portで接続が検知されEnabled stateになった場合
         if(portsc.bits.PED && !portsc.bits.PR && !portsc.bits.PLS) {
-            err = TransitionState(portID, PortStateEnabled);
+            err = TransitionPortState(portID, PortStateEnabled);
             if(err.code)
                 return err;
             
@@ -247,7 +262,7 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
 
     // USB2で発行したリセット処理が完了してEnable stateになった場合
     if(portsc.bits.PRC && portsc.bits.PED && !portsc.bits.PR && !portsc.bits.PLS) {
-        err = TransitionState(portID, PortStateEnabled);
+        err = TransitionPortState(portID, PortStateEnabled);
         if(err.code)
             return err;
         

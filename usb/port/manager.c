@@ -52,7 +52,7 @@ static void setState(int portID, PortState s) {
     table.state[portID - 1] = s;
 }
 
-USBError TransitionState(int portID, PortState to) {
+USBError TransitionPortState(int portID, PortState to) {
     PortState from  = getState(portID);
     switch(to) {
         case PortStateEnabled:
@@ -67,6 +67,14 @@ USBError TransitionState(int portID, PortState to) {
             return NewErrorf(ErrPort, "invalid port state transition");
     }
     setState(portID, to);
+
+    Log(
+        Info,
+        "[+] port%#x: state changed from %#x to %#x\n",
+        portID,
+        from,
+        to
+    );
 
     return Nil; 
 }
