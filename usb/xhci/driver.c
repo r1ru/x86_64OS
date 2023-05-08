@@ -72,6 +72,11 @@ USBError initXhc(int NumDevice) {
     };
     configureMSI(xhcDev, msgAddr, msgData);
 
+    // USB Device Managerの初期化
+    err = InitDeviceManager();
+    if(err.code)
+        return err;
+
     // start xHC 
     usbcmd = op->USBCMD;
     usbcmd.bits.R_S = 1;
@@ -96,19 +101,22 @@ static uint16_t portSpeed2MaxPacketSize(uint8_t speed) {
 // TODO: 関数に切り出す
 // メモリ確保に失敗したときはaddressingPortID = 0;にするべきだが現状Freeがないので回復することはない。
 static USBError addressDevice(uint8_t slotID) {
+    USBError err;
+    // USBデバイスの情報を管理する構造体を確保
+    USBDevice *dev = NewUSBDevice();
     
-    // InputContextの生成と初期化
-    InputContext *inputctx = newInputContext();
-    if(!inputctx)
+    // InputContextを生成
+    dev->InputContext = newInputContext();
+    if(!dev->InputContext)
         return NewErrorf(ErrMemory, "could not allocate inputctx");
     
     // A0(SlotContext)とA1(EP0(Default Controll Pipe))を有効化
-    inputctx->InputControlContext.AddContextFlags |= 0b11;
-
+    dev->InputContext->InputControlContext.AddContextFlags |= 0b11;
+    
      // SlotContextを設定 ref: p.96
     PORTSCBitmap portsc = pr[addressingPortID - 1].PORTSC;
 
-    inputctx->SlotContext = (SlotContext) {
+    dev->InputContext->SlotContext = (SlotContext) {
         .RouteString        = 0,
         .Speed              = portsc.bits.PortSpeed,
         .ContextEntries     = 1,
@@ -116,16 +124,16 @@ static USBError addressDevice(uint8_t slotID) {
     };
 
     // Default Control Pipe用のTransfer Ringを生成
-    TXRing *r = newTXRing(0x10);
-    if(!r)
+    dev->TransferRings[0] = newTXRing(0x10);
+    if(!dev->TransferRings[0])
         return NewErrorf(ErrMemory, "could not allocate transfer ring");
 
     // Default Controll Pipeの設定 ref: p.89
-    inputctx->EndpointContext[0] = (EndpointContext) {
+    dev->InputContext->EndpointContext[0] = (EndpointContext) {
         .EPType             = 4, // Control
-        .MaxPacketSize      = portSpeed2MaxPacketSize(inputctx->SlotContext.Speed),
+        .MaxPacketSize      = portSpeed2MaxPacketSize(dev->InputContext->SlotContext.Speed),
         .MaxBurstSize       = 0,
-        .TRDequeuePointer   = (uint64_t)r->buf >> 4,
+        .TRDequeuePointer   = (uint64_t)dev->TransferRings[0]->buf >> 4,
         .DCS                = 1, // r->PCS shoud be initialied to 1
         .Interval           = 0,
         .MaxPStreams        = 0,
@@ -133,16 +141,21 @@ static USBError addressDevice(uint8_t slotID) {
         .CErr               = 3, 
     };
 
-    // Output Contextを生成してdcbaaに登録
-    DeviceContext *outputctx = newDeviceContext();
-    if(!outputctx)
+    // OutputContextを生成してdcbaaに登録
+    dev->OutputContext= newDeviceContext();
+    if(!dev->OutputContext)
         return NewErrorf(ErrMemory, "could not allocate outputctx");
     
-    dcbaa[slotID] = outputctx;
+    dcbaa[slotID] = dev->OutputContext;
 
+    // Device Mangerに登録
+    err = RegisterDevice(dev, slotID);
+    if(err.code)
+        return err;
+    
     // AddressDeviceCommandを発行 ref: p.110
     return PushCommand((TRB *)&(AddressDeviceCommandTRB) {
-        .InputContextPointerHiandLo = (uint64_t)inputctx >> 4,
+        .InputContextPointerHiandLo = (uint64_t)dev->InputContext >> 4,
         .BSR                        = 0,
         .TRBType                    = AddressDeviceCommand,
         .SlotID                     = slotID,
@@ -184,8 +197,7 @@ static USBError OnCompletionEvent(CommandCompletionEventTRB *trb) {
             err = TransitionSlotState(trb->SlotId, SlotStateAddressed);
             if(err.code)
                 return err;
-            // TODO: ここに処理を追加
-            return Nil;
+            return GetDeviceDescriptor(trb->SlotId);
         
         default:
             return Nil;
@@ -291,12 +303,47 @@ static USBError OnPortStatusChangedEvent(PortStatusChangedEventTRB *trb) {
     );
 }
 
+static USBError OnTransferEvent(TransferEventTRB *trb) {
+    TRB *req = (TRB *)trb->TRBPointerHiandLo;
+
+    Log(
+        Info,
+        "[+] received trb@%p: type: %#x completion code: %#x transfer length: %#x\n",
+        req,
+        req->TRBType,
+        trb->CompletionCode,
+        trb->TRBType,
+        trb->TRBTransferLength
+    );
+
+    SetupStageTRB *setup;
+
+    switch(req->TRBType) {
+        case SetupStage:
+            setup = (SetupStageTRB *)req;
+
+            // Device Descriptorの転送だった場合
+            if(setup->bRequeset == 6 && setup->wValue == 0x0100) {
+                PrintDeviceDescriptor(trb->SlotID);
+                GetConfiguration(trb->SlotID);
+            }
+            // Configuration Descriptorの転送だった場合
+            if(setup->bRequeset == 6 && setup->wValue == 0x0200) {
+                 PrintConfigurationDescriptor(trb->SlotID);
+            }
+    }
+
+    return Nil;
+}
+
 static USBError processEvent(TRB *trb) {
     switch(trb->TRBType) {
         case CommandCompletionEvent:
             return OnCompletionEvent((CommandCompletionEventTRB *)trb);
         case PortStatsChangeEvent:
             return OnPortStatusChangedEvent((PortStatusChangedEventTRB *)trb);
+        case TransferEvent:
+            return OnTransferEvent((TransferEventTRB *)trb);
         default:
             return NewErrorf(
                 ErrEvent,

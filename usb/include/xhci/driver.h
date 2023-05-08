@@ -14,6 +14,9 @@
 #include <xhci/context.h>
 #include <port/manager.h>
 #include <slot/manager.h>
+#include <device/manager.h>
+#include <device/device.h>
+#include <device/descriptor.h>
 #include <interrupt.h>
 #include <memory/allocator.h>
 
