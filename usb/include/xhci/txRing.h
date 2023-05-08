@@ -20,6 +20,7 @@ typedef struct __attribute__((packed)){
 TXRing * newTXRing(int cap);
 USBError initCommandRing(int cap);
 USBError RingDoorBell(int slotID, int epNumber);
+USBError PushTRB(TXRing *r, TRB *trb);
 USBError PushCommand(TRB *trb);
 
 #endif 

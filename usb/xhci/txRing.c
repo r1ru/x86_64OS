@@ -41,7 +41,7 @@ USBError initCommandRing(int cap) {
 }
 
 // CommandRing, TransferRing共用の処理
-static USBError pushTRB(TXRing *r, TRB *trb) {
+USBError PushTRB(TXRing *r, TRB *trb) {
     TRB *dest = &r->buf[r->writeIdx];
 
     *dest   = *trb;
@@ -66,13 +66,13 @@ static USBError pushTRB(TXRing *r, TRB *trb) {
 
 // Doorbell Regiterに書き込みを行う
 USBError RingDoorBell(int slotID, int epNumber) {
-    if(slotID == 0) {
-        // slotIDが0の時はDB0に書き込み、epNumberは無視。
-        db->data = 0;
-    } else {
-        // それ以外の場合はslotIDに対応するDBにDCI値を書き込む。
-        db[slotID].data = epNumber * 2 + 1;
-    }
+    db[slotID] = (DoorBellRegister){
+        .bits = {
+            .DBTarget   = slotID == 0 ? 0 : epNumber * 2 + 1,
+            .DBStreamId = 0
+        }
+    };
+    
     Log(
         Info,
         "[+] rang doorbell for slot%#x\n",
@@ -88,7 +88,7 @@ USBError PushCommand(TRB *trb) {
         case NoOpCommand:
         case EnableSlotCommand:
         case AddressDeviceCommand:
-            pushTRB(cr, trb);
+            PushTRB(cr, trb);
             RingDoorBell(0, 0);
             return Nil;
         default:
